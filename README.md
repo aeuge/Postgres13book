@@ -1,7 +1,7 @@
 # Postgres 13 book
 # Postgres && Kubernetes && Clouds
 # Оглавление / CHAPTER
-1. Установка PostgreSQL 13    https://github.com/aeuge/Postgres13book/blob/main/Chapter01.md
+1. Установка PostgreSQL 13    https://github.com/aeuge/Postgres13book/blob/main/CHAPTER01.md
 2. Физический уровень    6
 3. Работа с консольной утилитой psql    6
 4. ACID && MVCC    7
