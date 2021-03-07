@@ -16,6 +16,7 @@
 15. https://en.wikipedia.org/wiki/File_Transfer_Protocol
 16. https://ftp.postgresql.org/pub/source/v12.1/postgresql-12.1.tar.gz
 17. https://cloud.google.com/
-
+18. https://en.wikipedia.org/wiki/Ping
+19. https://cloud.google.com/sdk/gcloud
 
 
