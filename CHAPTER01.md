@@ -18,5 +18,8 @@
 17. https://cloud.google.com/
 18. https://en.wikipedia.org/wiki/Ping
 19. https://cloud.google.com/sdk/gcloud
+20. https://en.wikipedia.org/wiki/SSH_(Secure_Shell)
+21. https://github.com/aeuge/Postgres13book/blob/main/01/docker-compose.yml
+
 
 
