@@ -18,8 +18,14 @@
 17. https://cloud.google.com/
 18. https://en.wikipedia.org/wiki/Ping
 19. https://cloud.google.com/sdk/gcloud
-20. https://en.wikipedia.org/wiki/SSH_(Secure_Shell)
-21. https://github.com/aeuge/Postgres13book/blob/main/01/docker-compose.yml
+20. https://en.wikipedia.org/wiki/IP_address
+21. https://en.wikipedia.org/wiki/SSH_(Secure_Shell)
+22. https://github.com/aeuge/Postgres13book/blob/main/01/docker-compose.yml
+23. https://en.wikipedia.org/wiki/Firewall_(computing)
+24. https://en.wikipedia.org/wiki/Subnetwork
+25. https://en.wikipedia.org/wiki/Front_end_and_back_end
+26. https://en.wikipedia.org/wiki/Representational_state_transfer
+27. https://en.wikipedia.org/wiki/Port_(computer_networking)
 
 
 
