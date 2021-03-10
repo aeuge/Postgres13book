@@ -8,4 +8,4 @@
 7. https://www.postgresql.org/docs/current/sql-createtablespace.html
 8. https://www.pgpool.net/mediawiki/index.php/Main_Page
 9. https://en.wikipedia.org/wiki/Localhost
-
+10. https://habr.com/ru/company/southbridge/blog/464245/
