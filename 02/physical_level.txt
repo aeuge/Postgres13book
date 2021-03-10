@@ -8,3 +8,55 @@ ls -la
 ls -l base
 # - command in psql
 # select oid, datname,dattablespace from pg_database;
+# create database book;
+# select * from pg_tablespace;
+
+-- make a catalog for new tablespace
+exit
+sudo su
+sudo mkdir /home/postgres
+sudo chown postgres /home/postgres
+sudo su postgres
+cd /home/postgres
+mkdir tmptblspc
+
+psql
+# create tablespace ts location '/home/postgres/tmptblspc';
+-- list of tablespaces
+# \db
+# create database app tablespace ts;
+# \c app
+-- look for default tablespace
+# \l+ 
+# create table test (i int);
+# create table test2 (i int) tablespace pg_default;
+# select tablename, tablespace from pg_tables where schemaname = 'public';
+-- change tablespace for table
+# alter table test set tablespace pg_default;
+# select oid, spcname from pg_tablespace; -- oid унимальный номер, по кторому можем найти файлы
+# select oid, datname,dattablespace from pg_database;
+
+-- where is table
+# select pg_relation_filepath('test2');
+
+-- show size of database
+# SELECT pg_database_size('app');
+
+-- pretty size
+# SELECT pg_size_pretty(pg_database_size('app'));
+
+-- full size of table
+# SELECT pg_size_pretty(pg_total_relation_size('test2'));
+
+-- only size of data
+# SELECT pg_size_pretty(pg_table_size('test2'));
+
+-- ... only indexes
+# SELECT pg_size_pretty(pg_indexes_size('test2'));
+
+-- size of visability map fro table test2
+# SELECT pg_size_pretty(pg_relation_size('test2','vm'));
+
+-- size of tablespace
+# SELECT pg_size_pretty(pg_tablespace_size('ts'));
+

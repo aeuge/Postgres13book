@@ -5,5 +5,7 @@
 4. http://manpages.ubuntu.com/manpages/hirsute/en/man1/pg_ctlcluster.1.html
 5. https://en.wikipedia.org/wiki/Data_definition_language
 6. https://www.postgresql.org/docs/13/sql-createdatabase.html
-7. https://en.wikipedia.org/wiki/Localhost
-8. 
+7. https://www.postgresql.org/docs/current/sql-createtablespace.html
+8. https://www.pgpool.net/mediawiki/index.php/Main_Page
+9. https://en.wikipedia.org/wiki/Localhost
+
