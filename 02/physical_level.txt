@@ -1,0 +1,10 @@
+gcloud compute ssh postgres13
+pg_lsclusters
+sudo pg_createcluster 13 main2
+sudo nano /etc/postgresql/13/main/postgresql.conf
+sudo su postgres
+cd /var/lib/postgresql/13/main
+ls -la
+ls -l base
+# - command in psql
+# select oid, datname,dattablespace from pg_database;
