@@ -5,3 +5,21 @@ psql
 \dt
 select * from test;
 exit
+cd $HOME
+pwd
+ls -l 
+mkdir scripts
+cd scripts
+nano select.sql
+-------
+\c app
+\dt
+select * from test;
+-------
+psql
+\i /var/lib/postgresql/scripts/select.sql
+
+select * from pg_stat_activity;
+\x
+select * from pg_stat_activity;
+\x
