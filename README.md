@@ -1,10 +1,10 @@
 # Postgres 13 book
 # Postgres && Kubernetes && Clouds
 # Оглавление / CHAPTER
-1. Установка PostgreSQL 13    https://github.com/aeuge/Postgres13book/blob/main/CHAPTER01.md
-2. Физический уровень    6
-3. Работа с консольной утилитой psql    6
-4. ACID && MVCC    7
+1. Установка PostgreSQL 13              https://github.com/aeuge/Postgres13book/blob/main/CHAPTER01.md
+2. Физический уровень                   https://github.com/aeuge/Postgres13book/blob/main/CHAPTER02.md
+3. Работа с консольной утилитой psql    https://github.com/aeuge/Postgres13book/blob/main/CHAPTER03.md
+4. ACID && MVCC                         https://github.com/aeuge/Postgres13book/blob/main/CHAPTER04.md
 5. Уровни изоляции транзакций    8
 6. Логический уровень    9
 7. Работа с правами пользователя    10

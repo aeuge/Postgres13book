@@ -1,0 +1,7 @@
+# psql
+sudo su postgres
+psql
+\c app
+\dt
+select * from test;
+exit
