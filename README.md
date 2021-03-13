@@ -5,7 +5,7 @@
 2. Физический уровень                   https://github.com/aeuge/Postgres13book/blob/main/CHAPTER02.md
 3. Работа с консольной утилитой psql    https://github.com/aeuge/Postgres13book/blob/main/CHAPTER03.md
 4. ACID && MVCC                         https://github.com/aeuge/Postgres13book/blob/main/CHAPTER04.md
-5. Уровни изоляции транзакций    8
+5. Уровни изоляции транзакций           https://github.com/aeuge/Postgres13book/blob/main/CHAPTER05.md
 6. Логический уровень    9
 7. Работа с правами пользователя    10
 8. Журналы    11
