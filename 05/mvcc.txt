@@ -1,0 +1,52 @@
+-- уровни изоляции транзакций
+-- создадим табличку для тестов
+\c app
+CREATE TABLE testA (i serial, amount int);
+INSERT INTO testA(amount) VALUES (100), (500);
+select * from testA;
+
+\echo :AUTOCOMMIT
+\set AUTOCOMMIT OFF
+SHOW TRANSACTION ISOLATION LEVEL;
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+
+-- test TRANSACTION ISOLATION LEVEL READ COMMITTED;
+-- 1 console
+begin;
+select * from testA;
+
+-- 2 consoleapp=# 
+begin;
+update testA set amount = 555 where i = 1;
+commit;
+
+-- 1 console
+select * from testA; -- different values
+
+-- TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+-- 1 console
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+BEGIN;
+-- WARNING:  there is already a transaction in progress
+SELECT * FROM testA;
+ i | amount
+---+--------
+ 2 |    500
+ 1 |    555
+(2 rows)
+
+-- 2 console
+SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+INSERT INTO testA VALUES (777);
+COMMIT;
+
+-- 1 console
+SELECT * FROM testA;
+ i | amount
+---+--------
+ 2 |    500
+ 1 |    555
+(2 rows)
