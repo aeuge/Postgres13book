@@ -26,6 +26,8 @@ commit;
 -- 1 console
 select * from testA; -- different values
 
+
+
 -- TRANSACTION ISOLATION LEVEL REPEATABLE READ;
 -- 1 console
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -50,3 +52,27 @@ SELECT * FROM testA;
  2 |    500
  1 |    555
 (2 rows)
+
+
+
+-- TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+DROP TABLE IF EXISTS testS;
+CREATE TABLE testS (i int, amount int);
+INSERT INTO TESTS VALUES (1,10), (1,20), (2,100), (2,200); 
+COMMIT;
+
+-- 1 console
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+SELECT sum(amount) FROM testS WHERE i = 1;
+INSERT into testS VALUES (2,30);
+
+-- 2 consol
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+SELECT sum(amount) FROM testS WHERE i = 2;
+INSERT into testS VALUES (1,200);
+
+-- 1 console 
+COMMIT;
+
+-- 2 console 
+COMMIT;

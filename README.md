@@ -6,8 +6,8 @@
 3. Работа с консольной утилитой psql    https://github.com/aeuge/Postgres13book/blob/main/CHAPTER03.md
 4. ACID && MVCC                         https://github.com/aeuge/Postgres13book/blob/main/CHAPTER04.md
 5. Уровни изоляции транзакций           https://github.com/aeuge/Postgres13book/blob/main/CHAPTER05.md
-6. Логический уровень    9
-7. Работа с правами пользователя    10
+6. Логический уровень                   https://github.com/aeuge/Postgres13book/blob/main/CHAPTER06.md
+7. Работа с правами пользователя        https://github.com/aeuge/Postgres13book/blob/main/CHAPTER07.md
 8. Журналы    11
 9. Блокировки    12
 10. Настройка PostgreSQL    13

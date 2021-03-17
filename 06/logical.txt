@@ -1,0 +1,59 @@
+create database otus;
+
+create table test(i int);
+SELECT 'test'::regclass::oid;
+create index ttt on test (i);
+SELECT 'ttt'::regclass::oid;
+
+
+-- Системный каталог
+select oid, datname, datistemplate, datallowconn from pg_database;
+
+SELECT pg_size_pretty( pg_database_size( 'otus' ) );
+
+
+-- Схемы
+\dn
+-- Текущая схема
+select current_schema();
+\d pg_database
+Строка поиска
+show search_path;
+-- set search_path to .. - в рамках сессии
+-- параметр можно установить и на уровне отдельной базы данных:
+-- ALTER DATABASE otus SET search_path = public, special;
+-- в рамках кластера в файле postgresql.conf
+
+\dt
+
+select * from pg_namespace;
+
+-- мы также можем посмотреть, что происходит внутри вызова системных команд
+\set ECHO_HIDDEN on
+\l
+\set ECHO_HIDDEN off
+
+-- интересное поведение и search_path
+\d pg_database
+create table pg_database (i int);
+\d pg_database
+\d public.pg_database
+select * from pg_database limit 1;
+
+-- в 1 схеме или разных?
+create table t1( i int);
+create schema postgres;
+create table t2( i int);
+
+create table t1( i int);
+\dt
+\dt public.*
+
+-- А вот как можно было бы получить список объектов в схеме public из таблиц системного каталога:
+SELECT relname, relnamespace FROM pg_class WHERE relnamespace = 'public'::regnamespace;
+-- ::regnamespace -> преобразуем имя схемы в OID схемы
+-- Поле relnamespace имеет тип OID; вот соответствующая строка таблицы pg_namespace:
+SELECT oid, nspname FROM pg_namespace WHERE nspname = 'public';
+
+-- можем переносить таблицу между схемами - при этом меняеться только запись в pg_class, физически данные на месте
+ALTER TABLE t2 SET SCHEMA public;
