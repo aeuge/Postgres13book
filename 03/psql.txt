@@ -3,23 +3,23 @@ sudo su postgres
 psql
 \c app
 \dt
-select * from test;
+SELECT * FROM test;
 exit
 cd $HOME
 pwd
 ls -l 
 mkdir scripts
 cd scripts
-nano select.sql
+nano SELECT.sql
 -------
 \c app
 \dt
-select * from test;
+SELECT * FROM test;
 -------
 psql
-\i /var/lib/postgresql/scripts/select.sql
+\i /var/lib/postgresql/scripts/SELECT.sql
 
-select * from pg_stat_activity;
+SELECT * FROM pg_stat_activity;
 \x
-select * from pg_stat_activity;
+SELECT * FROM pg_stat_activity;
 \x

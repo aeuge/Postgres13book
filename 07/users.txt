@@ -1,15 +1,15 @@
 -- Users
 
-select usename, usesuper from pg_catalog.pg_user;
+SELECT usename, usesuper FROM pg_catalog.pg_user;
 \du
 
-create user test;
-select * from pg_catalog.pg_user;
+CREATE USER test;
+SELECT * FROM pg_catalog.pg_user;
 
 попробуем законнектиться
 \c - test
 
-alter user test LOGIN;
+ALTER USER test LOGIN;
 \c - test
 
 -- почему не подключились?
@@ -23,7 +23,7 @@ alter user test LOGIN;
 ALTER USER test PASSWORD 'otus$123';
 
 -- попробуем нового юзера создать
-create user test2 WITH PASSWORD 'otus$123' NOLOGIN;
+CREATE USER test2 WITH PASSWORD 'otus$123' NOLOGIN;
 \c - test2
 
 -- удалим наш проект

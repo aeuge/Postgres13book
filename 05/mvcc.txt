@@ -3,7 +3,7 @@
 \c app
 CREATE TABLE testA (i serial, amount int);
 INSERT INTO testA(amount) VALUES (100), (500);
-select * from testA;
+SELECT * FROM testA;
 
 \echo :AUTOCOMMIT
 \set AUTOCOMMIT OFF
@@ -16,15 +16,15 @@ SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 -- test TRANSACTION ISOLATION LEVEL READ COMMITTED;
 -- 1 console
 begin;
-select * from testA;
+SELECT * FROM testA;
 
 -- 2 consoleapp=# 
 begin;
-update testA set amount = 555 where i = 1;
+UPDATE testA set amount = 555 WHERE i = 1;
 commit;
 
 -- 1 console
-select * from testA; -- different values
+SELECT * FROM testA; -- different values
 
 
 
@@ -64,12 +64,12 @@ COMMIT;
 -- 1 console
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 SELECT sum(amount) FROM testS WHERE i = 1;
-INSERT into testS VALUES (2,30);
+INSERT INTO testS VALUES (2,30);
 
 -- 2 consol
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 SELECT sum(amount) FROM testS WHERE i = 2;
-INSERT into testS VALUES (1,200);
+INSERT INTO testS VALUES (1,200);
 
 -- 1 console 
 COMMIT;

@@ -1,17 +1,17 @@
 gcloud compute ssh postgres13
 pg_lsclusters
-sudo pg_createcluster 13 main2
+sudo pg_CREATEcluster 13 main2
 sudo nano /etc/postgresql/13/main/postgresql.conf
 sudo su postgres
 cd /var/lib/postgresql/13/main
 ls -la
 ls -l base
 # - command in psql
-# select oid, datname,dattablespace from pg_database;
-# create database book;
-# select * from pg_tablespace;
+# SELECT oid, datname,datTABLEspace FROM pg_database;
+# CREATE DATABASE book;
+# SELECT * FROM pg_TABLEspace;
 
--- make a catalog for new tablespace
+-- make a catalog for new TABLEspace
 exit
 sudo su
 sudo mkdir /home/postgres
@@ -21,42 +21,42 @@ cd /home/postgres
 mkdir tmptblspc
 
 psql
-# create tablespace ts location '/home/postgres/tmptblspc';
--- list of tablespaces
+# CREATE TABLEspace ts location '/home/postgres/tmptblspc';
+-- list of TABLEspaces
 # \db
-# create database app tablespace ts;
+# CREATE DATABASE app TABLEspace ts;
 # \c app
--- look for default tablespace
+-- look for default TABLEspace
 # \l+ 
-# create table test (i int);
-# create table test2 (i int) tablespace pg_default;
-# select tablename, tablespace from pg_tables where schemaname = 'public';
--- change tablespace for table
-# alter table test set tablespace pg_default;
-# select oid, spcname from pg_tablespace; -- oid унимальный номер, по кторому можем найти файлы
-# select oid, datname,dattablespace from pg_database;
+# CREATE TABLE test (i int);
+# CREATE TABLE test2 (i int) TABLEspace pg_default;
+# SELECT TABLEname, TABLEspace FROM pg_TABLEs WHERE schemaname = 'public';
+-- change TABLEspace for TABLE
+# ALTER TABLE test set TABLEspace pg_default;
+# SELECT oid, spcname FROM pg_TABLEspace; -- oid унимальный номер, по кторому можем найти файлы
+# SELECT oid, datname,datTABLEspace FROM pg_database;
 
--- where is table
-# select pg_relation_filepath('test2');
+-- WHERE is TABLE
+# SELECT pg_relation_filepath('test2');
 
--- show size of database
+-- SHOW size of database
 # SELECT pg_database_size('app');
 
 -- pretty size
 # SELECT pg_size_pretty(pg_database_size('app'));
 
--- full size of table
+-- full size of TABLE
 # SELECT pg_size_pretty(pg_total_relation_size('test2'));
 
 -- only size of data
-# SELECT pg_size_pretty(pg_table_size('test2'));
+# SELECT pg_size_pretty(pg_TABLE_size('test2'));
 
 -- ... only indexes
 # SELECT pg_size_pretty(pg_indexes_size('test2'));
 
--- size of visability map fro table test2
+-- size of visability map fro TABLE test2
 # SELECT pg_size_pretty(pg_relation_size('test2','vm'));
 
--- size of tablespace
-# SELECT pg_size_pretty(pg_tablespace_size('ts'));
+-- size of TABLEspace
+# SELECT pg_size_pretty(pg_TABLEspace_size('ts'));
 

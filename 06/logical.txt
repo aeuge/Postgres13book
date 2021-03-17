@@ -1,59 +1,88 @@
-create database otus;
-
-create table test(i int);
-SELECT 'test'::regclass::oid;
-create index ttt on test (i);
-SELECT 'ttt'::regclass::oid;
 
 
--- Системный каталог
-select oid, datname, datistemplate, datallowconn from pg_database;
 
-SELECT pg_size_pretty( pg_database_size( 'otus' ) );
+-- database
+-- system catalog
+SELECT oid, datname, datistemplate, datallowconn FROM pg_database;
+-- size
+SELECT pg_size_pretty(pg_database_size('logical'));
 
 
--- Схемы
+-- schema
 \dn
--- Текущая схема
-select current_schema();
+-- current schema
+SELECT current_schema();
+-- view table
 \d pg_database
-Строка поиска
-show search_path;
--- set search_path to .. - в рамках сессии
+-- list of ALL namespaces
+SELECT * FROM pg_namespace;
+
+-- seach path
+SHOW search_path;
+-- SET search_path to .. - в рамках сессии
 -- параметр можно установить и на уровне отдельной базы данных:
 -- ALTER DATABASE otus SET search_path = public, special;
 -- в рамках кластера в файле postgresql.conf
 
 \dt
 
-select * from pg_namespace;
+
+-- интересное поведение и search_path
+\d pg_database
+CREATE TABLE pg_database (i int);
+\d pg_database
+\d public.pg_database
+SELECT * FROM pg_database limit 1;
+
+-- в 1 схеме или разных?
+CREATE TABLE t1(i int);
+CREATE SCHEMA postgres;
+CREATE TABLE t2(i int);
+
+CREATE TABLE t1(i int);
+\dt
+\dt public.*
+SET search_path TO public, "$user";
+\dt
+
+SET search_path TO public, "$user", pg_catalog;
+\dt
+
+create temp table t1(i int);
+\dt
+
+SET search_path TO public, "$user", pg_catalog, pg_temp;
+\dt
+
+-- можем переносить таблицу между схемами - при этом меняеться только запись в pg_class, физически данные на месте
+ALTER TABLE t2 SET SCHEMA public;
+
+
+
+-- relations
+SELECT * FROM pg_class \gx
+
+CREATE DATABASE logical;
+\c logical
+CREATE TABLE testL(i int);
+SELECT 'testL'::regclass::oid;
+-- look on filesystem
+SELECT oid, datname FROM pg_database WHERE datname='logical';
+cd /var/lib/postgresql/13/main/base/16449
+ls -l | grep 16450
+-- adding some data
+INSERT INTO testL VALUES (1),(3),(5);
+-- look on filesystem
+ls -l | grep 16450
+
+-- create index on new table
+CREATE index indexL on testL (i);
+SELECT 'indexL'::regclass::oid;
+-- look on filesystem
+ls -l | grep 16453
 
 -- мы также можем посмотреть, что происходит внутри вызова системных команд
 \set ECHO_HIDDEN on
 \l
 \set ECHO_HIDDEN off
 
--- интересное поведение и search_path
-\d pg_database
-create table pg_database (i int);
-\d pg_database
-\d public.pg_database
-select * from pg_database limit 1;
-
--- в 1 схеме или разных?
-create table t1( i int);
-create schema postgres;
-create table t2( i int);
-
-create table t1( i int);
-\dt
-\dt public.*
-
--- А вот как можно было бы получить список объектов в схеме public из таблиц системного каталога:
-SELECT relname, relnamespace FROM pg_class WHERE relnamespace = 'public'::regnamespace;
--- ::regnamespace -> преобразуем имя схемы в OID схемы
--- Поле relnamespace имеет тип OID; вот соответствующая строка таблицы pg_namespace:
-SELECT oid, nspname FROM pg_namespace WHERE nspname = 'public';
-
--- можем переносить таблицу между схемами - при этом меняеться только запись в pg_class, физически данные на месте
-ALTER TABLE t2 SET SCHEMA public;
