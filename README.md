@@ -1,5 +1,5 @@
 # Postgres 13 book
-# Author aristov.tech
+# Author https://aristov.tech
 # Postgres && Kubernetes && Clouds
 # Оглавление / CHAPTER
 1. Установка PostgreSQL 13              https://github.com/aeuge/Postgres13book/blob/main/CHAPTER01.md
