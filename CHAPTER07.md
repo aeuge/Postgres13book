@@ -5,4 +5,4 @@
 4. https://en.wikipedia.org/wiki/MD5
 5. https://postgrespro.ru/docs/postgrespro/13/sql-grant
 6. https://postgrespro.ru/docs/postgrespro/13/sql-revoke
-7. 
+7.  
