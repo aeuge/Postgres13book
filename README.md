@@ -9,7 +9,7 @@
 5. Уровни изоляции транзакций           https://github.com/aeuge/Postgres13book/blob/main/CHAPTER05.md
 6. Логический уровень                   https://github.com/aeuge/Postgres13book/blob/main/CHAPTER06.md
 7. Работа с правами пользователя        https://github.com/aeuge/Postgres13book/blob/main/CHAPTER07.md
-8. Журналы    11
+8. Журналы                              https://github.com/aeuge/Postgres13book/blob/main/CHAPTER08.md
 9. Блокировки    12
 10. Настройка PostgreSQL    13
 11. Работа с большим объемом реальных данных    14
