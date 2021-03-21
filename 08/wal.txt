@@ -1,1 +1,7 @@
 -- Write Ahead Log
+SET fsync = on;
+SHOW fsync;
+SHOW wal_sync_method;
+
+SELECT pg_current_insert_lsn();
+
