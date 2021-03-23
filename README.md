@@ -10,7 +10,7 @@
 6. Логический уровень                   https://github.com/aeuge/Postgres13book/blob/main/CHAPTER06.md
 7. Работа с правами пользователя        https://github.com/aeuge/Postgres13book/blob/main/CHAPTER07.md
 8. Журналы                              https://github.com/aeuge/Postgres13book/blob/main/CHAPTER08.md
-9. Блокировки    
+9. Блокировки                           https://github.com/aeuge/Postgres13book/blob/main/CHAPTER09.md
 10. Настройка PostgreSQL    
 11. Работа с большим объемом реальных данных    
 12. Виды индексов. Работа с индексами и оптимизация запросов    
