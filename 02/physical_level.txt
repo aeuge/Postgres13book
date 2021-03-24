@@ -7,11 +7,11 @@ cd /var/lib/postgresql/13/main
 ls -la
 ls -l base
 # - command in psql
-# SELECT oid, datname,datTABLEspace FROM pg_database;
+# SELECT oid, datname,dattablespace FROM pg_database;
 # CREATE DATABASE book;
-# SELECT * FROM pg_TABLEspace;
+# SELECT * FROM pg_tablespace;
 
--- make a catalog for new TABLEspace
+-- make a catalog for new tablespace
 exit
 sudo su
 sudo mkdir /home/postgres
@@ -21,20 +21,20 @@ cd /home/postgres
 mkdir tmptblspc
 
 psql
-# CREATE TABLEspace ts location '/home/postgres/tmptblspc';
--- list of TABLEspaces
+# CREATE tablespace ts location '/home/postgres/tmptblspc';
+-- list of tablespaces
 # \db
-# CREATE DATABASE app TABLEspace ts;
+# CREATE DATABASE app tablespace ts;
 # \c app
--- look for default TABLEspace
+-- look for default tablespace
 # \l+ 
 # CREATE TABLE test (i int);
-# CREATE TABLE test2 (i int) TABLEspace pg_default;
-# SELECT TABLEname, TABLEspace FROM pg_TABLEs WHERE schemaname = 'public';
--- change TABLEspace for TABLE
-# ALTER TABLE test set TABLEspace pg_default;
-# SELECT oid, spcname FROM pg_TABLEspace; -- oid унимальный номер, по кторому можем найти файлы
-# SELECT oid, datname,datTABLEspace FROM pg_database;
+# CREATE TABLE test2 (i int) tablespace pg_default;
+# SELECT TABLEname, tablespace FROM pg_TABLEs WHERE schemaname = 'public';
+-- change tablespace for TABLE
+# ALTER TABLE test set tablespace pg_default;
+# SELECT oid, spcname FROM pg_tablespace; -- oid унимальный номер, по кторому можем найти файлы
+# SELECT oid, datname,dattablespace FROM pg_database;
 
 -- WHERE is TABLE
 # SELECT pg_relation_filepath('test2');
@@ -57,6 +57,6 @@ psql
 -- size of visability map fro TABLE test2
 # SELECT pg_size_pretty(pg_relation_size('test2','vm'));
 
--- size of TABLEspace
-# SELECT pg_size_pretty(pg_TABLEspace_size('ts'));
+-- size of tablespace
+# SELECT pg_size_pretty(pg_tablespace_size('ts'));
 

@@ -1,16 +1,26 @@
 
-sudo -u postgres psql
-
 SELECT * FROM pg_locks \gx
 SELECT pg_backend_pid();
 SELECT pg_blocking_pids(pid);
 SHOW log_lock_waits;
 
-
 CREATE DATABASE locks;
 \c locks
 -- увидим, что pid изменился
 SELECT pg_backend_pid();
+CREATE TABLE t (i int);
+
+-- посмотрим, что например VIEW тоже является видом RELATION
+BEGIN;
+SELECT * FROM pg_locks;
+CREATE VIEW v AS SELECT * FROM t;
+SELECT * FROM pg_locks;
+SELECT relname FROM pg_class WHERE oid = 16385;
+ROLLBACK;
+
+
+-- посмотрим различные виды блокировок и как найти, кто нас блокирует. 
+-- Для это мы будет работать из 2 параллельных терминаловв и, соответственно, сессий
 CREATE TABLE accounts(id integer, amount numeric);
 INSERT INTO accounts VALUES (1,2000.00), (2,2000.00), (3,2000.00);
 
@@ -40,6 +50,8 @@ SELECT pg_blocking_pids(33066);
 SELECT * FROM pg_stat_activity WHERE pid = ANY(pg_blocking_pids(14352)) \gx
 commit;
 
+
+
 -- рекомендательные блокировки advisory_lock
 -- https://postgrespro.ru/docs/postgrespro/12/functions-admin#FUNCTIONS-ADVISORY-LOCKS
 -- во втором терминале
@@ -55,14 +67,6 @@ SELECT pg_advisory_lock(hashtext('заблокируй меня полность
 -- во втором терминале
 -- что произойдет? почему, как думаете?
 commit; 
-
-
-
-
-
-
-
-
 
 
 -- commit не освобождает блокировку
