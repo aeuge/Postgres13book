@@ -1,7 +1,6 @@
 
 SELECT * FROM pg_locks \gx
 SELECT pg_backend_pid();
-SELECT pg_blocking_pids(pid);
 SHOW log_lock_waits;
 
 CREATE DATABASE locks;
@@ -18,19 +17,37 @@ SELECT * FROM pg_locks;
 SELECT relname FROM pg_class WHERE oid = 16385;
 ROLLBACK;
 
+-- рекомендательные блокировки advisory_lock
+-- в первом терминале
+BEGIN; 
+SELECT hashtext('заблокируй меня полностью');
+SELECT pg_advisory_lock(hashtext('заблокируй меня полностью'));
+SELECT pg_backend_pid();
 
--- посмотрим различные виды блокировок и как найти, кто нас блокирует. 
+SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks WHERE pid = 1883;
+
+--попробуем во втором терминале
+SELECT pg_advisory_lock(hashtext('заблокируй меня полностью'));
+
+-- в 1 терминале
+COMMIT; 
+
+-- commit не освобождает блокировку
+SELECT pg_advisory_unlock(hashtext('заблокируй меня полностью'));
+-- только под своим PID
+
+
+
+-- посмотрим различные виды блокировок строк и как найти, кто нас блокирует. 
 -- Для это мы будет работать из 2 параллельных терминаловв и, соответственно, сессий
 CREATE TABLE accounts(id integer, amount numeric);
 INSERT INTO accounts VALUES (1,2000.00), (2,2000.00), (3,2000.00);
 
 -- во втором окне
-gcloud compute ssh postgres
-sudo -u postgres psql
 \c locks
 begin;
 SELECT pg_backend_pid();
-SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks WHERE pid = 33394;
+SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks WHERE pid = 2165;
 UPDATE accounts SET amount = amount + 1 WHERE id = 1;
 -- смотрим опять блокировки - что изменилось и почему?
 
@@ -38,43 +55,18 @@ UPDATE accounts SET amount = amount + 1 WHERE id = 1;
 CREATE INDEX ON accounts(id);
 -- Что произойдет?
 -- проверим во втором терминале
-SELECT pg_backend_pid();
-SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks WHERE pid = 33394;
+SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks WHERE pid = 2165;
 SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks;
 -- узнаем, кто нас блокирует
--- таймаут лока
--- https://www.postgresql.org/docs/current/runtime-config-client.html#GUC-LOCK-TIMEOUT
-SELECT pg_blocking_pids(33066); 
+SELECT pg_blocking_pids(1883); 
 
 -- и что вообще происходит PG_STAT_ACTIVITY
-SELECT * FROM pg_stat_activity WHERE pid = ANY(pg_blocking_pids(14352)) \gx
+SELECT * FROM pg_stat_activity WHERE pid = ANY(pg_blocking_pids(1883)) \gx
 commit;
 
 
 
--- рекомендательные блокировки advisory_lock
--- https://postgrespro.ru/docs/postgrespro/12/functions-admin#FUNCTIONS-ADVISORY-LOCKS
--- во втором терминале
-begin; 
-SELECT hashtext('заблокируй меня полностью');
-SELECT pg_advisory_lock(hashtext('заблокируй меня полностью'));
-SELECT pg_backend_pid();
-SELECT locktype, relation::REGCLASS, virtualxid AS virtxid, transactionid AS xid, mode, granted FROM pg_locks WHERE pid = 33260;
-
---попробуем в первом терминале
-SELECT pg_advisory_lock(hashtext('заблокируй меня полностью'));
-
--- во втором терминале
--- что произойдет? почему, как думаете?
-commit; 
-
-
--- commit не освобождает блокировку
-SELECT pg_advisory_unlock(hashtext('заблокируй меня полностью'));
--- только под своим PID
-
-
---блокировка строк
+-- блокировка строк более глубоко
 -- объяснения про побитовую маску
 -- https://habr.com/ru/company/postgrespro/blog/445820/
 CREATE EXTENSION pageinspect;
