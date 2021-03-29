@@ -67,8 +67,6 @@ commit;
 
 
 -- блокировка строк более глубоко
--- объяснения про побитовую маску
--- https://habr.com/ru/company/postgrespro/blog/445820/
 CREATE EXTENSION pageinspect;
 CREATE VIEW accounts_v AS
 SELECT '(0,'||lp||')' AS ctid,
@@ -82,20 +80,19 @@ FROM heap_page_items(get_raw_page('accounts',0))
 WHERE lp <= 10
 ORDER BY lp;
 
-
+SELECT * FROM accounts;
 SELECT * FROM accounts_v ;
 truncate accounts;
 INSERT INTO accounts VALUES (1,2000.00), (2,2000.00), (3,2000.00);
-SELECT * FROM accounts_v ;
 
-begin;
+BEGIN;
 UPDATE accounts set id = 4 WHERE id = 1;
 UPDATE accounts set amount = 4000 WHERE id = 3;
 SELECT * FROM accounts_v ;
--- что изменилось?
+
 
 -- во втором терминале
-begin;
+BEGIN;
 SELECT * FROM accounts WHERE id = 2 FOR KEY SHARE;
 SELECT * FROM accounts WHERE id = 3 FOR KEY SHARE;
 SELECT * FROM accounts_v;
@@ -119,34 +116,15 @@ FROM pg_locks;
 
 SELECT * FROM locks_v;
 
--- заблокируем строку в разделяемом режиме
-begin;
-SELECT txid_current(), pg_backend_pid();
-SELECT * FROM accounts WHERE id = 3 FOR SHARE;
--- второй терминал
-begin;
-UPDATE accounts set amount = 4000 WHERE id = 3;
-SELECT * FROM locks_v WHERE pid = 5371;//в первом терминале
-SELECT pg_blocking_pids(5636);
--- третий терминал
-gcloud compute ssh postgres
-sudo -u postgres psql
-\c locks
 
-SELECT * FROM accounts WHERE id = 3 FOR SHARE;
-SELECT * FROM pgrowlocks('accounts') \gx
+-- попытка посмотреть блокировки
+SELECT pid, backend_type, wait_event_type, wait_event FROM pg_stat_activity;
 
 -- обычно получаем блокировку, а в этом режиме получим ошибку
 SELECT * FROM accounts FOR UPDATE NOWAIT; 
--- третий терминал
-rollback;
-begin;
+
 -- для многопоточной обработки данных
 DECLARE c CURSOR FOR SELECT * FROM accounts ORDER BY id FOR UPDATE SKIP LOCKED;
 FETCH C; 
 
--- попытка посмотреть блокировки
-SELECT pid, backend_type, wait_event_type, wait_event FROM pg_stat_activity;
-pgbench -i locks
-pgbench -T 30 locks
 

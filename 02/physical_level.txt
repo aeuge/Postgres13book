@@ -1,6 +1,6 @@
 gcloud compute ssh postgres13
 pg_lsclusters
-sudo pg_CREATEcluster 13 main2
+sudo pg_createcluster 13 main2
 sudo nano /etc/postgresql/13/main/postgresql.conf
 sudo su postgres
 cd /var/lib/postgresql/13/main
@@ -24,15 +24,15 @@ psql
 # CREATE tablespace ts location '/home/postgres/tmptblspc';
 -- list of tablespaces
 # \db
-# CREATE DATABASE app tablespace ts;
+# CREATE DATABASE app TABLESPACE ts;
 # \c app
 -- look for default tablespace
 # \l+ 
 # CREATE TABLE test (i int);
-# CREATE TABLE test2 (i int) tablespace pg_default;
+# CREATE TABLE test2 (i int) TABLESPACE pg_default;
 # SELECT TABLEname, tablespace FROM pg_TABLEs WHERE schemaname = 'public';
 -- change tablespace for TABLE
-# ALTER TABLE test set tablespace pg_default;
+# ALTER TABLE test SET TABLESPACE pg_default;
 # SELECT oid, spcname FROM pg_tablespace; -- oid унимальный номер, по кторому можем найти файлы
 # SELECT oid, datname,dattablespace FROM pg_database;
 

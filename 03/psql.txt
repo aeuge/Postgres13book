@@ -10,14 +10,14 @@ pwd
 ls -l 
 mkdir scripts
 cd scripts
-nano SELECT.sql
+nano select.sql
 -------
 \c app
 \dt
 SELECT * FROM test;
 -------
 psql
-\i /var/lib/postgresql/scripts/SELECT.sql
+\i /var/lib/postgresql/scripts/select.sql
 
 SELECT * FROM pg_stat_activity;
 \x
