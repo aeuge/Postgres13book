@@ -31,3 +31,11 @@ SELECT count(*) from pg_file_settings;
 SELECT sourcefile, count(*) FROM pg_file_settings GROUP BY sourcefile;
 SELECT * FROM pg_file_settings WHERE sourcefile='/var/lib/postgresql/13/maintest/postgresql.auto.conf';
 
+
+-- tuning
+sudo apt install libdbd-pg-perl libdbi-perl perl-modules -y
+sudo su postgres
+cd $HOME
+wget -O postgresqltuner.pl https://postgresqltuner.pl
+chmod +x postgresqltuner.pl
+./postgresqltuner.pl --host=/var/run/postgresql
