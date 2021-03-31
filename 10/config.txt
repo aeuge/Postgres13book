@@ -20,14 +20,14 @@ SELECT context, count(*) FROM pg_settings GROUP BY context ORDER BY 2 desc;
 SELECT category, count(*) FROM pg_settings GROUP BY category ORDER BY 2 desc;
 SELECT source, count(*) FROM pg_settings GROUP BY source ORDER BY 2 desc;
 
--- pg_file_settings
-SELECT count(*) from pg_file_settings;
-\d+ pg_file_settings
-SELECT sourcefile, count(*) FROM pg_file_settings GROUP BY sourcefile;
-
-
 -- get current value 
 SELECT setting||' x '||coalesce(unit,'units') FROM pg_settings WHERE name='shared_buffers';
 SELECT setting||' x '||coalesce(unit,'units') FROM pg_settings WHERE name='max_connections';
 SHOW max_connections;
 SELECT current_setting('max_connections');
+
+-- pg_file_settings
+SELECT count(*) from pg_file_settings;
+SELECT sourcefile, count(*) FROM pg_file_settings GROUP BY sourcefile;
+SELECT * FROM pg_file_settings WHERE sourcefile='/var/lib/postgresql/13/maintest/postgresql.auto.conf';
+
