@@ -18,14 +18,15 @@ order by 3 desc;
 
 -- вариант смонтировать бакет в локальную директорию
 https://github.com/GoogleCloudPlatform/gcsfuse
+-- installing
+https://github.com/GoogleCloudPlatform/gcsfuse/blob/master/docs/installing.md
 -- монтируем в каталог под юзером postgres
+sudo -u postgres
 cd $HOME
 mkdir taxi
-chmod 777 taxi
-cd taxi
-gcsfuse pg13 .
+gcsfuse pg13 taxi
 
-
+psql
 CREATE DATABASE taxi;
 \c taxi
 CREATE TABLE taxi_trips(unique_key text
@@ -52,6 +53,12 @@ CREATE TABLE taxi_trips(unique_key text
 ,dropoff_longitude float
 ,dropoff_location text);
 
-sudo su postgres
-
+cd /home/aeugene/taxi
 for f in *.csv*; do psql -d taxi -c "\\COPY taxi_trips FROM PROGRAM 'cat $f' CSV HEADER"; done
+
+\timing
+SELECT payment_type, round(sum(tips)/sum(tips+fare)*100) tips_persent, count(*)
+FROM taxi_trips
+group by payment_type
+order by 3 desc;
+
