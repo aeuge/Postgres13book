@@ -1,7 +1,18 @@
+-- creating 2 core 4 GB 100 ssd for big data
+gcloud beta compute --project=celtic-house-266612 instances create postgres13bd --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-minimal-2004-focal-v20210416 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=postgres13bd --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+
+bq show bigquery-public-data:chicago_taxi_trips.taxi_trips
+bq extract bigquery-public-data:chicago_taxi_trips.taxi_trips gs://pg2021/chicago/taxi.csv.*
+
+SELECT count(*)
+FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`;
+
 SELECT payment_type, round(sum(tips)/sum(trip_total)*100, 0) + 0 as tips_percent, count(*) as c
 FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips` 
 group by payment_type
-order by 3;
+order by 3 desc;
+
+
 
 create extension file_fdw;
 create server pgcsv foreign data wrapper file_fdw;
