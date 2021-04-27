@@ -13,4 +13,8 @@
 12. https://github.com/ossc-db/pg_bulkload
 13. https://github.com/GoogleCloudPlatform/gcsfuse
 14. https://github.com/GoogleCloudPlatform/gcsfuse/blob/master/docs/installing.md 
-15. 
+15. https://pgtune.leopard.in.ua/#/
+16. https://github.com/citusdata/cstore_fdw
+17. https://asu-analitika.ru/chto-takoe-vitrina-dannyh-opredelenie-raznovidnosti-i-primery/
+18. https://www.hitachivantara.com/en-us/products/data-management-analytics.html
+19. https://en.wikipedia.org/wiki/Data_vault_modeling

@@ -25,6 +25,8 @@ sudo -u postgres
 cd $HOME
 mkdir taxi
 gcsfuse pg13 taxi
+-- umount 
+fusermount -u taxi
 
 psql
 CREATE DATABASE taxi;
@@ -57,8 +59,14 @@ cd /home/aeugene/taxi
 for f in *.csv*; do psql -d taxi -c "\\COPY taxi_trips FROM PROGRAM 'cat $f' CSV HEADER"; done
 
 \timing
-SELECT payment_type, round(sum(tips)/sum(tips+fare)*100) tips_persent, count(*)
+SELECT count(*) FROM taxi_trips;
+
+EXPLAIN SELECT payment_type, round(sum(tips)/sum(tips+fare)*100) tips_persent, count(*)
 FROM taxi_trips
 group by payment_type
 order by 3 desc;
 
+SELECT payment_type, round(sum(tips)/sum(tips+fare)*100) tips_persent, count(*)
+FROM taxi_trips
+group by payment_type
+order by 3 desc;
