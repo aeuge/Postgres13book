@@ -1,0 +1,37 @@
+sudo su postgres
+psql
+CREATE DATABASE dvdrental;
+cd $HOME
+wget --quiet https://www.postgresqltutorial.com/wp-content/uploads/2019/05/dvdrental.zip
+unzip dvdrental.zip
+pg_restore -U postgres -d dvdrental dvdrental.tar
+psql
+\c dvdrental
+
+SELECT count(*) FROM rental;
+SELECT * FROM rental LIMIT 3;    
+
+\timing
+SELECT * FROM rental WHERE customer_id = 333 LIMIT 3;    
+
+CREATE INDEX idx_rental_customer_id ON rental(customer_id);
+SELECT * FROM rental WHERE customer_id = 333 LIMIT 3;    
+
+EXPLAIN SELECT * FROM rental WHERE customer_id = 333 LIMIT 3;    
+DROP INDEX idx_rental_customer_id;
+EXPLAIN SELECT * FROM rental WHERE customer_id = 333 LIMIT 3;    
+
+SELECT customer_id, count(customer_id) FROM rental GROUP BY customer_id ORDER BY 2 LIMIT 3;
+
+SELECT * FROM rental WHERE customer_id = 318 LIMIT 3;    
+
+CREATE TABLE test AS 
+SELECT generate_series AS id
+	, generate_series::text || (random() * 10)::text AS col2 
+    , (array['Yes', 'No', 'Maybe'])[floor(random() * 3 + 1)] AS is_okay
+FROM generate_series(1, 1000000);
+
+SELECT * FROM test WHERE id = 1;
+
+CREATE INDEX idx_test_id ON test(id);
+SELECT * FROM test WHERE id = 1;
