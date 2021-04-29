@@ -9,5 +9,8 @@
 8. https://postgrespro.ru/docs/postgrespro/13/routine-reindex
 9. https://en.wikipedia.org/wiki/Binary_search_tree
 10. https://www.postgresqltutorial.com/postgresql-sample-database/
-11. 
+11. https://postgrespro.ru/docs/postgrespro/13/textsearch-indexes
+12. https://postgrespro.ru/docs/postgrespro/13/textsearch-controls
+13. https://postgrespro.ru/docs/postgrespro/13/textsearch
+14. https://postgrespro.ru/docs/postgrespro/12/sql-cluster
 
