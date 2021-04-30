@@ -1,2 +1,17 @@
-sudo su postgres
-psql
+
+
+CREATE TABLE A (City_name varchar, Country varchar);
+INSERT INTO A (City_name, Country) VALUES
+(‘Tokyo’,’Japan’),
+(‘New York’,’USA’),
+(‘Fukuoka’,’Japan’),
+(‘Shanghai’,’China’);
+
+CREATE TABLE B (City_name varchar, Godzilla_attacks int);
+INSERT INTO B (City_name, Godzilla_attacks) VALUES
+(‘Fukuoka’,3),
+(‘Nagoya’,2),
+(‘New York’,3),
+(‘Tokai’,3),
+(‘Tokyo’,13),
+(‘Yokohama’,2);
