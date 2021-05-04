@@ -16,3 +16,44 @@ INSERT INTO b (city_name, godzilla_attacks) VALUES
 ('Tokai',3),
 ('Tokyo',13),
 ('Yokohama',2);
+
+-- inner joins
+SELECT a.city_name, b.godzilla_attacks
+FROM a
+JOIN b on a.city_name = b.city_name;
+
+ -- or
+SELECT a.city_name, b.godzilla_attacks
+FROM a
+INNER JOIN b on a.city_name = b.city_name;
+
+-- or
+SELECT a.city_name, b.godzilla_attacks
+FROM a, b 
+where a.city_name = b.city_name;
+
+-- left
+SELECT a.city_name, b.godzilla_attacks
+FROM a
+LEFT JOIN b on a.city_name = b.city_name;
+
+-- or
+SELECT a.city_name, b.godzilla_attacks
+FROM a
+LEFT OUTER JOIN b on a.city_name = b.city_name;
+
+-- or
+SELECT a.city_name, b.godzilla_attacks
+FROM b
+RIGHT JOIN a on a.city_name = b.city_name;
+
+-- left where b.key is null
+SELECT a.city_name, b.godzilla_attacks
+FROM a
+LEFT JOIN b on a.city_name = b.city_name 
+WHERE b.city_name is null;
+
+-- insane join
+SELECT a.city_name, b.city_name, b.godzilla_attacks
+FROM a
+LEFT JOIN b on (a.country = 'USA' AND b.godzilla_attacks = 2) OR b.godzilla_attacks = 13;
