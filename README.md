@@ -1,6 +1,6 @@
 # Postgres 13 book
 # Author https://aristov.tech
-# Postgres && Kubernetes && Clouds
+# Postgres 13. Tuning && Kubernetes && Clouds
 # Оглавление / CHAPTER
 1. [Установка PostgreSQL 13](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER01.md)
 2. [Физический уровень](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER02.md)
