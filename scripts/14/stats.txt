@@ -1,2 +1,2 @@
 # stats
-SELECT * FROM pg_stat_databases;
+SELECT * FROM pg_stat_database WHERE datname = 'demo';
