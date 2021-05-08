@@ -16,7 +16,7 @@
 12. [Виды индексов. Работа с индексами и оптимизация запросов](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER12.md)
 13. [Различные виды join'ов. Применение и оптимизация](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER13.md)
 14. [Сбор и использование статистики](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER14.md)
-15. Оптимизация производительности. Профилирование. Мониторинг
+15. [Оптимизация производительности. Профилирование. Мониторинг](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER15.md)
 16. Секционирование
 17. Резервное копирование и восстановление 
 18. Виды и устройство репликации в PostgreSQL

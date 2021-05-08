@@ -23,3 +23,9 @@ ANALYZE t1;
 
 -- now the row count estimate is more accurate:
 EXPLAIN ANALYZE SELECT * FROM t1 WHERE (a = 1) AND (b = 0);
+
+SELECT * FROM pg_stat_activity;
+
+SELECT * FROM pg_stat_user_tables WHERE relname = 'flights' \gx
+
+SELECT * FROM pg_stat_user_indexes WHERE relname = 'flights' \gx

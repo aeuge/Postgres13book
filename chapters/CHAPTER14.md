@@ -12,4 +12,7 @@
 11. https://www.postgresql.org/docs/13/monitoring-stats.html#MONITORING-PG-STAT-ACTIVITY-VIEW
 12. https://postgrespro.ru/docs/postgrespro/13/monitoring-stats#WAIT-EVENT-TABLE
 13. https://postgrespro.ru/docs/postgrespro/13/monitoring-stats#WAIT-EVENT-ACTIVITY-TABLE
+14. https://postgrespro.ru/docs/postgrespro/13/monitoring-stats#MONITORING-PG-STAT-ALL-TABLES-VIEW
+15. https://www.postgresql.org/docs/13/monitoring-stats.html#MONITORING-PG-STAT-ALL-INDEXES-VIEW
+16. https://www.postgresql.org/docs/13/pgstatstatements.html
 
