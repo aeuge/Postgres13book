@@ -1,1 +1,4 @@
 # optimize
+https://www.percona.com/doc/percona-monitoring-and-management/2.x/install/docker-setting-up.html
+-- on client
+sudo apt I pmm2-client
