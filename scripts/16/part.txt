@@ -37,3 +37,47 @@ SELECT COUNT(*) FROM logs_y2021m06;
 
 EXPLAIN SELECT * FROM logs WHERE logdate = now()::date;
 EXPLAIN SELECT * FROM logs WHERE user_id = 1;
+
+-- partitioning large table 
+\c demo
+\dt bookings.*
+\d+ bookings.bookings
+
+CREATE TABLE bookings.bookings_part (
+	book_ref bpchar(6) NOT NULL,
+	book_date timestamptz NOT NULL,
+	total_amount numeric(10,2) NOT NULL
+) PARTITION BY RANGE (book_date);
+
+
+SELECT min(book_date), max(book_date) FROM bookings.bookings;
+
+
+CREATE TABLE bookings.bookings_part_y2016m08 PARTITION OF bookings.bookings_part FOR VALUES FROM ('2016-08-01') TO ('2016-09-01');
+CREATE TABLE bookings.bookings_part_y2016m09 PARTITION OF bookings.bookings_part FOR VALUES FROM ('2016-09-01') TO ('2016-10-01');
+CREATE TABLE bookings.bookings_part_y2016m10 PARTITION OF bookings.bookings_part FOR VALUES FROM ('2016-10-01') TO ('2016-11-01');
+CREATE TABLE bookings.bookings_part_y2016m11avobe PARTITION OF bookings.bookings_part FOR VALUES FROM ('2016-11-01') TO (MAXVALUE);
+
+\d+ bookings.bookings_part
+
+INSERT INTO bookings.bookings_part SELECT * FROM bookings.bookings;
+
+-- drop old & rename new
+ALTER TABLE bookings.bookings RENAME TO bookings2;
+
+DROP TABLE bookings.bookings;
+ALTER TABLE bookings.bookings_part RENAME TO bookings;
+
+-- after sections + data load
+CREATE INDEX ON bookings.bookings(book_date);
+
+-- error
+CREATE UNIQUE INDEX bookings_pkey2 ON bookings.bookings(book_ref);
+ALTER TABLE bookings.bookings ADD CONSTRAINT bookings_pkey_uniq UNIQUE (book_ref);
+
+CREATE UNIQUE INDEX bookings_pkey2 ON bookings.bookings(book_ref, book_date);
+
+EXPLAIN SELECT * FROM bookings.bookings WHERE book_date = now()::date;
+
+-- sliding window
+
