@@ -1,0 +1,93 @@
+# backup
+sudo mkdir /home/1 && sudo chmod 777 /home/1
+
+sudo -u postgres psql
+
+-- создадим табличку для тестов
+CREATE DATABASE backup;
+\c backup
+CREATE TABLE test (i int, col text);
+INSERT INTO test VALUES (1, '123'), (2, '456'), (3, '789');
+
+-- сделаем логическую копию
+COPY test TO '/home/1/test.csv' CSV HEADER;
+
+\! cat /home/1/test.csv
+
+-- восстановим данные в другую табличку
+-- ошибка!!!
+COPY test2 FROM '/home/1/test.csv' CSV HEADER;
+
+-- таблица должна быть создана заранее
+CREATE TABLE test2 (i int, col text);
+COPY test2 FROM '/home/1/test.csv' CSV HEADER;
+SELECT * FROM test2;
+
+-- архивируем БД через консольную утилиту
+sudo -u postgres pg_dump -d backup --CREATE
+sudo -u postgres pg_dump -d backup --CREATE > /home/1/1.sql
+sudo -u postgres pg_dump -d backup --CREATE | gzip > /home/1/backup.gz
+-- для pg_restore - кастомный сжатый формат
+sudo -u postgres pg_dump -d backup -Fc > /home/1/custom.gz
+
+-- посмотрим содержимое через cat
+
+-- восстановим БД
+sudo -u postgres psql < /home/1/1.sql
+\dt
+drop DATABASE backup;
+
+-- через pg_restore
+echo "drop DATABASE backup;" | sudo -u postgres psql
+echo "CREATE DATABASE backup;" | sudo -u postgres psql
+sudo -u postgres pg_restore custom.gz -d backup
+
+-- если перекодировать 
+pg_dump ... | iconv -f utf-8 -t cp-1251 > dump.sql
+
+
+-- посмотрим на параметры pg_dump && pg_restore
+sudo -u postgres pg_dump --help
+sudo -u postgres pg_restore --help
+
+-- pg_dumpall
+sudo -u postgres pg_dumpall > /home/1/backup.sql
+sudo -u postgres pg_dumpall --clean --globals-only > /home/1/globals.sql
+sudo -u postgres pg_dumpall --clean --schema-only > /home/1/schema.sql
+Восстановление
+sudo -u postgres psql < /home/1/backup.sql
+
+
+-- физическая репликация
+-- посмотрим параметры
+SELECT name, setting FROM pg_settings WHERE name IN ('wal_level','max_wal_senders');
+
+SELECT * FROM pg_replication_slots;
+
+-- Необходимо настроить файервол в файле pg_hba.conf для получения доступа извне localhost
+SELECT type, database, user_name, address, auth_method 
+FROM pg_hba_file_rules() WHERE DATABASE = '{replication}';
+
+
+-- Создадим 2 кластер
+sudo -u postgres pg_CREATEcluster -d /var/lib/postgresql/13/main2 13 main2
+-- Удалим оттуда файлы
+sudo -u postgres rm -rf /var/lib/postgresql/13/main2
+-- Сделаем бэкап нашей БД
+sudo -u postgres pg_basebackup -p 5432 -D /var/lib/postgresql/13/main2
+-- Зададим другой порт для 10 версии, сейчас автоматом новый порт
+-- echo 'port = 5433' >> /var/lib/postgresql/13/main2/postgresql.auto.conf
+-- Стартуем кластер
+sudo -u postgres pg_ctlcluster 13 main2 start
+-- Смотрим как стартовал
+pg_lsclusters
+sudo -u postgres psql --port 5433
+
+-- файловый архив
+SELECT name, setting FROM pg_settings WHERE name IN ('archive_mode','archive_command','archive_timeout');
+
+
+-- удалим наш проект
+gcloud compute instances delete postgresdocker
+gcloud compute instances delete postgresdocker2
+

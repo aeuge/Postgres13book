@@ -80,4 +80,22 @@ CREATE UNIQUE INDEX bookings_pkey2 ON bookings.bookings(book_ref, book_date);
 EXPLAIN SELECT * FROM bookings.bookings WHERE book_date = now()::date;
 
 -- sliding window
+\c part
+\d+ logs
 
+INSERT INTO logs(logdate, message, user_id) VALUES ('2021-01-01', 'DELETE RECORD 111 ON TABLE accounts', 33);
+
+ALTER TABLE logs DETACH PARTITION logs_y2021m01;
+\d+ logs
+
+SELECT * FROM logs_y2021m01;
+
+CREATE TABLE logs_archive (
+    id              serial,
+    logdate         date not null,
+    message         text,
+    user_id         int
+) PARTITION BY RANGE (logdate);
+ALTER TABLE logs_archive ATTACH PARTITION logs_y2021m01 FOR VALUES FROM ('2021-01-01') TO ('2021-02-01');
+
+SELECT * FROM logs_archive;

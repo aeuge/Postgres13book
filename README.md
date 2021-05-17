@@ -18,7 +18,7 @@
 14. [Сбор и использование статистики](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER14.md)
 15. [Оптимизация производительности. Профилирование. Мониторинг](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER15.md)
 16. [Секционирование](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER16.md)
-17. Резервное копирование и восстановление 
+17. [Резервное копирование и восстановление](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER17.md) 
 18. Виды и устройство репликации в PostgreSQL
 19. Кластеры высокой доступности для PostgreSQL    
 20. Кластеры для горизонтального масштабирования PostgreSQL    
