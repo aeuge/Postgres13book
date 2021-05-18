@@ -24,9 +24,11 @@ COPY test2 FROM '/home/1/test.csv' CSV HEADER;
 SELECT * FROM test2;
 
 -- архивируем БД через консольную утилиту
-sudo -u postgres pg_dump -d backup --CREATE
-sudo -u postgres pg_dump -d backup --CREATE > /home/1/1.sql
-sudo -u postgres pg_dump -d backup --CREATE | gzip > /home/1/backup.gz
+exit -- from psql
+sudo -u postgres pg_dump -d backup --create
+sudo -u postgres pg_dump -d backup --create > /home/1/1.sql
+sudo -u postgres pg_dump -d backup --create | gzip > /home/1/backup.gz
+
 -- для pg_restore - кастомный сжатый формат
 sudo -u postgres pg_dump -d backup -Fc > /home/1/custom.gz
 
@@ -34,28 +36,60 @@ sudo -u postgres pg_dump -d backup -Fc > /home/1/custom.gz
 
 -- восстановим БД
 sudo -u postgres psql < /home/1/1.sql
+sudo -u postgres psql
+\c backup
+select * from test2;
 \dt
-drop DATABASE backup;
+exit
+echo "DROP DATABASE backup;" | sudo -u postgres psql
+sudo -u postgres psql < /home/1/1.sql
 
 -- через pg_restore
-echo "drop DATABASE backup;" | sudo -u postgres psql
+-- получим дубликаты данных
+sudo -u postgres pg_restore /home/1/custom.gz -d backup
+sudo -u postgres psql
+\c backup
+select * from test2;
+
+echo "DROP DATABASE backup;" | sudo -u postgres psql
+sudo -u postgres pg_restore /home/1/custom.gz -d backup
+
+-- correct
 echo "CREATE DATABASE backup;" | sudo -u postgres psql
-sudo -u postgres pg_restore custom.gz -d backup
+sudo -u postgres pg_restore /home/1/custom.gz -d backup
+sudo -u postgres psql
+\c backup
+select * from test2;
+
+-- inly 1 table
+echo "DROP DATABASE backup;" | sudo -u postgres psql
+echo "CREATE DATABASE backup;" | sudo -u postgres psql
+sudo -u postgres pg_restore -t test /home/1/custom.gz -d backup
+sudo -u postgres psql
+\c backup
+\dt
+
 
 -- если перекодировать 
 pg_dump ... | iconv -f utf-8 -t cp-1251 > dump.sql
-
 
 -- посмотрим на параметры pg_dump && pg_restore
 sudo -u postgres pg_dump --help
 sudo -u postgres pg_restore --help
 
 -- pg_dumpall
-sudo -u postgres pg_dumpall > /home/1/backup.sql
+sudo -u postgres pg_dumpall > /home/1/backupall.sql
+
+-- Восстановление
+sudo -u postgres psql < /home/1/backupall.sql
+
+-- параллельный вариант
 sudo -u postgres pg_dumpall --clean --globals-only > /home/1/globals.sql
 sudo -u postgres pg_dumpall --clean --schema-only > /home/1/schema.sql
-Восстановление
-sudo -u postgres psql < /home/1/backup.sql
+sudo -u postgres pg_dump -d backup --create > /home/1/1.sql
+sudo -u postgres psql < /home/1/globals.sql
+sudo -u postgres psql < /home/1/schema.sql
+sudo -u postgres psql < /home/1/1.sql
 
 
 -- физическая репликация
