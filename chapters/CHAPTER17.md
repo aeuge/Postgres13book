@@ -7,6 +7,7 @@
 6. https://postgrespro.ru/docs/postgrespro/13/app-pg-dumpall
 7. https://en.wikipedia.org/wiki/Snapshot_(computer_storage)
 8. https://en.wikipedia.org/wiki/DevOps
-9. 
+9. https://postgrespro.ru/docs/postgrespro/13/app-pgbasebackup
+10. 
 
 

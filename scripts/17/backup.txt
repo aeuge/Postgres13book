@@ -104,24 +104,41 @@ FROM pg_hba_file_rules() WHERE DATABASE = '{replication}';
 
 
 -- Создадим 2 кластер
-sudo -u postgres pg_CREATEcluster -d /var/lib/postgresql/13/main2 13 main2
+sudo -u postgres pg_createcluster -d /var/lib/postgresql/13/main2 13 main2
 -- Удалим оттуда файлы
 sudo -u postgres rm -rf /var/lib/postgresql/13/main2
 -- Сделаем бэкап нашей БД
 sudo -u postgres pg_basebackup -p 5432 -D /var/lib/postgresql/13/main2
--- Зададим другой порт для 10 версии, сейчас автоматом новый порт
--- echo 'port = 5433' >> /var/lib/postgresql/13/main2/postgresql.auto.conf
+-- удалим ненужно уже табличное пространство ts в /home/postgres/tmptblspace
+sudo -u postgres psql
+\db
+DROP TABLESPACE ts;
+
+-- есть ли объекты в нашем ts
+SELECT c.relname, t.spcname 
+FROM pg_class c 
+  JOIN pg_tablespace t ON c.reltablespace = t.oid 
+WHERE t.spcname = 'ts';
+
+-- смотрим БД подробно
+\l+
+DROP DATABASE app;
+DROP TABLESPACE ts;
+-- Сделаем бэкап нашей БД
+sudo -u postgres pg_basebackup -p 5432 -D /var/lib/postgresql/13/main2
+
 -- Стартуем кластер
 sudo -u postgres pg_ctlcluster 13 main2 start
 -- Смотрим как стартовал
 pg_lsclusters
+
 sudo -u postgres psql --port 5433
+\l
+\c backup
+select * from test;
 
 -- файловый архив
 SELECT name, setting FROM pg_settings WHERE name IN ('archive_mode','archive_command','archive_timeout');
 
 
--- удалим наш проект
-gcloud compute instances delete postgresdocker
-gcloud compute instances delete postgresdocker2
 
