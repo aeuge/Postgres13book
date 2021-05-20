@@ -8,7 +8,16 @@
 7. https://en.wikipedia.org/wiki/Snapshot_(computer_storage)
 8. https://en.wikipedia.org/wiki/DevOps
 9. https://postgrespro.ru/docs/postgrespro/13/app-pgbasebackup
-10. https://www.pgbarman.org/
-11. 
+10. https://www.enterprisedb.com/edb-docs/d/edb-backup-and-recovery-tool/installation-getting-started/quick-start-guide/2.5.1/index.html
+11. https://www.pgbarman.org/
+12. https://pgbackrest.org/
+13. https://helpcenter.veeam.com/docs/agentforlinux/userguide/postgresql_backup.html?ver=50
+14. https://github.com/postgrespro/pg_probackup
+15. https://en.wikipedia.org/wiki/Data_deduplication
+16. https://github.com/wal-e/wal-e
+17. https://github.com/wal-g/wal-g
+18. https://www.citusdata.com/blog/2017/08/18/introducing-wal-g-faster-restores-for-postgres/
+
+
 
 

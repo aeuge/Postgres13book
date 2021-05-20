@@ -19,7 +19,7 @@
 15. [Оптимизация производительности. Профилирование. Мониторинг](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER15.md)
 16. [Секционирование](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER16.md)
 17. [Резервное копирование и восстановление](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER17.md) 
-18. Виды и устройство репликации в PostgreSQL
+18. [Виды и устройство репликации в PostgreSQL](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER18.md)
 19. Кластеры высокой доступности для PostgreSQL    
 20. Кластеры для горизонтального масштабирования PostgreSQL    
 21. PostgreSQL и Google Kubernetes Engine    
