@@ -1,21 +1,49 @@
 #replica
 
-Создадим 2 кластер
-sudo pg_CREATEcluster -d /var/lib/postgresql/13/main2 13 main2
-Удалим оттуда файлы
-sudo rm -rf /var/lib/postgresql/13/main2
-Сделаем бэкап нашей БД. Ключ -R создаст заготовку управляющего файла recovery.conf.
-sudo -u postgres pg_basebackup -p 5432 -R -D /var/lib/postgresql/13/main2
-Зададим другой порт
--- echo 'port = 5433' >> /var/lib/postgresql/10/main2/postgresql.auto.conf
-Добавим параметр горячего резерва, чтобы реплика принимала запросы на чтение
-echo 'hot_standby = on' >> /var/lib/postgresql/13/main2/postgresql.auto.conf
-Стартуем кластер
-sudo pg_ctlcluster 13 main2 start
-Смотрим как стартовал
-$ pg_lsclusters
+-- Посмотрим статус кластера
+pg_lsclusters
 
-Посмотрим на процессы реплики:
+-- Остановим и удалим 2 кластер:
+sudo pg_ctlcluster 13 main2 stop
+sudo pg_dropcluster 13 main2
+
+-- Создадим 2 кластер
+sudo pg_createcluster -d /var/lib/postgresql/13/main2 13 main2
+
+
+-- Посмотрим статус кластера
+pg_lsclusters
+
+--Удалим оттуда файлы
+sudo rm -rf /var/lib/postgresql/13/main2
+
+-- Сделаем бэкап нашей БД. Ключ -R создаст заготовку управляющего файла recovery.conf.
+sudo -u postgres pg_basebackup -p 5432 -R -D /var/lib/postgresql/13/main2
+
+-- Добавим параметр горячего резерва
+sudo su postgres
+echo 'hot_standby = on' >> /var/lib/postgresql/13/main2/postgresql.auto.conf
+exit
+
+-- Стартуем кластер
+sudo pg_ctlcluster 13 main2 start
+
+--Смотрим как стартовал
+pg_lsclusters
+
+-- на мастере создадим БД и посмотрим, что произошло на реплике
+sudo -u postgres psql
+CREATE DATABASE replica;
+exit;
+sudo -u postgres psql -p 5433
+\l replica
+
+
+-- Проверим состояние репликации:
+SELECT * FROM pg_stat_replication \gx
+
+-- Посмотрим на процессы реплики:
+sudo su postgres
 ps -o pid,command --ppid `head -n 1 /var/lib/postgresql/13/main2/postmaster.pid`
  PID COMMAND
   848 postgres: 10/main2: startup process   recovering 00000001000000000000000B
@@ -25,7 +53,7 @@ ps -o pid,command --ppid `head -n 1 /var/lib/postgresql/13/main2/postmaster.pid`
   852 postgres: 10/main2: wal receiver process   streaming 0/B002290
 Процесс wal receiver принимает поток журнальных записей, процесс startup применяет изменения.
 
-Сравним с процессами мастера:
+-- Сравним с процессами мастера:
 ps -o pid,command --ppid `head -n 1 /var/lib/postgresql/13/main/postmaster.pid`
   PID COMMAND
   853 postgres: 10/main: wal sender process postgres [local] streaming 0/B002290
@@ -36,12 +64,14 @@ ps -o pid,command --ppid `head -n 1 /var/lib/postgresql/13/main/postmaster.pid`
 10434 postgres: 10/main: stats collector process
 10435 postgres: 10/main: bgworker: logical replication launcher
 
-Проверим состояние репликации:
-SELECT * FROM pg_stat_replication \gx
+ps -xf
 
-sudo pg_ctlcluster 13 main2 promote
+-- перевести реплику в состояние мастера
+pg_ctlcluster 13 main2 promote
 
---Логическая репликация
+
+
+-- Логическая репликация
 ALTER SYSTEM SET wal_level = logical;
 
 Рестартуем кластер
