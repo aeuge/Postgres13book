@@ -74,143 +74,72 @@ pg_ctlcluster 13 main2 promote
 -- Логическая репликация
 ALTER SYSTEM SET wal_level = logical;
 
-Рестартуем кластер
-sudo pg_ctlcluster 10 main restart
+-- Рестартуем кластер
+sudo pg_ctlcluster 13 main restart
+sudo -u postgres psql
 
-
-На первом сервере создаем публикацию:
+-- Поменяем пароль пользователю postgres
+\password
+-- На первом сервере создаем публикацию:
+\c replica
 CREATE TABLE test(i int);
 CREATE PUBLICATION test_pub FOR TABLE test;
-\password 
--- otus$123
+-- \password 
 \dRp+
 
-создадим подписку на втором экземпляре
+
+-- создадим подписку на втором экземпляре
+sudo -u postgres psql -p 5433
+\c replica
 CREATE TABLE test(i int);
---создадим подписку к БД по Порту с Юзером и Паролем и Копированием данных=false
+-- создадим подписку к БД по Порту с Юзером и Паролем и Копированием данных=false
 CREATE SUBSCRIPTION test_sub 
-CONNECTION 'host=localhost port=5432 user=postgres password=otus$123 dbname=postgres' 
+CONNECTION 'host=localhost port=5432 user=postgres password=Postgres123# dbname=replica' 
 PUBLICATION test_pub WITH (copy_data = false);
---
+
 \dRs
 
+-- Посмотрим на состояние подписки:
 SELECT * FROM pg_stat_subscription \gx
 
 --добавим одинаковые данные
+-- на подписчике
+INSERT INTO test VALUES(1);
 
+-- на публикующем сервере
+INSERT INTO test VALUES(1);
 
----добавить индекс
-CREATE unique index on test (i);
+--на подписчике
+SELECT * FROM test;
+
+-- очистим таблицу и добавим индекс
+TRUNCATE test;
+CREATE UNIQUE INDEX ON test (i);
 \dS+ test
 
-drop publication test_pub;
-drop subscription test_sub;
+-- проверим одинаковые данные после создания индекса
+-- на подписчике
+INSERT INTO test VALUES(2);
 
---проверим одинаковые данные
+-- на публикующем сервере
+INSERT INTO test VALUES(2);
 
-почему данные залились во 2 экземпляр?
+--на подписчике
+SELECT * FROM test;
 
+-- Посмотрим на состояние подписки:
+SELECT * FROM pg_stat_subscription \gx
 
+-- также проблему увидим в логах
+sudo tail /var/log/postgresql/postgresql-13-main2.log
 
+-- удалим на подписчике конфликтующую запись
+DELETE FROM test WHERE i = 2;
 
---добавим индекс на 2 БД
+-- Посмотрим на состояние подписки:
+SELECT * FROM pg_stat_subscription \gx
 
-tail /var/log/postgresql/postgresql-13-main2.log
-
-
-
--- настроим реплику на 2 ВМ
-Как посмотреть конфигурационные файлы?
-
-# show hba_file;
-# show config_file;
--- настроим подключение
-sudo su postgres
--- listener = '*'
-nano /etc/postgresql/13/main/postgresql.conf
--- host all all 0.0.0.0/0 md5
--- host relication all 0.0.0.0/0 md5
-ALTER USER postgres password '123$otus';
--- но лучше завести своего пользователя для репликации
-pg_ctlcluster 13 main stop
-pg_ctlcluster 13 main start
-
-gcloud compute instances list
-psql -h 35.239.28.170 -U postgres -W
-CREATE TABLE t( i int);
-INSERT INTO t values(1);
-
--- развернем ВМ postgres в GCE
-gcloud beta compute --project=calm-tendril-290110 instances create postgres2 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=322426944095-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --image=ubuntu-2004-focal-v20200907 --image-project=ubuntu-os-cloud --boot-disk-size=10GB --boot-disk-type=pd-ssd --boot-disk-device-name=postgres2 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
- 
-gcloud compute ssh postgres2
- 
--- установим 13 версию
-sudo apt UPDATE && sudo apt upgrade -y && sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - && sudo apt-get UPDATE && sudo apt-get -y install postgresql && sudo apt install unzip
-
-sudo rm -rf /var/lib/postgresql/13/main
-pg_basebackup -p 5432 -h 35.239.28.170 -R -D /var/lib/postgresql/13/main -U postgres -W
-pg_ctlcluster 13 main start
-
--- удалим наш проект
-gcloud compute instances delete postgres
-gcloud compute instances delete postgres2
-
-
-
--- docker
-
--- развернем ВМ postgres в GCE
-gcloud beta compute --project=calm-tendril-290110 instances create postgresdocker --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=322426944095-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --image=ubuntu-2004-focal-v20200907 --image-project=ubuntu-os-cloud --boot-disk-size=10GB --boot-disk-type=pd-ssd --boot-disk-device-name=postgresdocker --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
- 
-gcloud compute ssh postgresdocker
-
--- поставим докер
-sudo apt-get UPDATE && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && sudo apt-key fingerprint 0EBFCD88 && sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) sTABLE" && sudo apt-get UPDATE && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-sudo docker run --name pg-server -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v /var/lib/postgres:/var/lib/postgresql/data postgres:13
-
-
--- развернем ВМ 2 postgres в GCE
-gcloud beta compute --project=calm-tendril-290110 instances create postgresdocker2 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=322426944095-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append --image=ubuntu-2004-focal-v20200907 --image-project=ubuntu-os-cloud --boot-disk-size=10GB --boot-disk-type=pd-ssd --boot-disk-device-name=postgresdocker2 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
- 
-gcloud compute ssh postgresdocker2
-
--- поставим докер
-sudo apt-get UPDATE && sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && sudo apt-key fingerprint 0EBFCD88 && sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) sTABLE" && sudo apt-get UPDATE && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-sudo docker run --name pg-replica -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -v /var/lib/postgres:/var/lib/postgresql/data postgres:13
-
-
-!! бэкап делаем внутрь!! подключаемого диска контейнера
-sudo docker exec -i pg-replica pg_basebackup -p 5432 -h 35.239.28.170 -R -D /var/lib/postgresql/data/data2 -U postgres -W
-
--- на 1 ВМ
--- нужно выяснить где лежит pg_hba.conf
--- sudo docker exec -it pg-server bash
-sudo docker stop pg-server
--- руками меняем listener * на хосте, не в докере !!!
-sudo nano /var/lib/postgres/pg_hba.conf
--- и host relication all 0.0.0.0/0 md5
-sudo nano /var/lib/postgres/postgresql.conf
-sudo docker start pg-server
-
--- на 2 ноде 
--- docker exec -i -pg-replica pg_ctlcluster 13 main stop
--- sudo docker exec -i pg-replica rm -rf /var/lib/postgresql/data
-!! бэкап делаем внутрь!! подключаемого диска контейнера
-sudo docker exec -i pg-replica pg_basebackup -p 5432 -h 35.239.28.170 -R -D /var/lib/postgresql/data/data2 -U postgres -W
-
---change data_direcotory to /var/lib/postgresql/data/data2
-sudo docker stop pg-replica
-sudo nano /var/lib/postgres/postgresql.conf 
--- sudo docker exec -i pg-replica rm -rf /var/lib/postgresql/data
--- sudo docker exec -it pg-replica bash
-sudo docker start pg-replica
--- sudo docker run -it --rm --network pg-net --name pg-client postgres:13 psql -h pg-server -U postgres
--- sudo docker ps -a
-
-или 2 вариант:
-https://gist.github.com/lfittl/9689e3b7b3e1293f1f18
-
+-- чтобы удалить публикацию и подписку 
+DROP PUBLICATION test_pub;
+DROP SUBSCRIPTION test_sub;
 

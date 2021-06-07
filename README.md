@@ -20,7 +20,7 @@
 16. [Секционирование](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER16.md)
 17. [Резервное копирование и восстановление](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER17.md) 
 18. [Виды и устройство репликации в PostgreSQL](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER18.md)
-19. Кластеры высокой доступности для PostgreSQL    
+19. [Кластеры высокой доступности для PostgreSQL](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER19.md)    
 20. Кластеры для горизонтального масштабирования PostgreSQL    
 21. PostgreSQL и Google Kubernetes Engine    
 22. PostgreSQL и Google Cloud Platform    
