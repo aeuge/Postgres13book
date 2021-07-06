@@ -1,0 +1,218 @@
+-- создаем вручную кластер, смотрим на параметры
+gcloud container clusters list
+kubectlG get all
+-- если делать через веб интерфейс ошибка, нужно переинициализировать кластер
+-- так как мы делали кластер не через gcloud, доступ мы не получим
+-- нужно прописать теперь контекст
+-- https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl
+gcloud container clusters get-credentials citus --zone us-central1-c
+-- посмотрим дефолтный тип стораджа
+kubectlG get storageclasses
+-- можем сделать свой - например для внешних дисков и т.д.
+
+cd /mnt/c/download/pg25
+nano pvc-demo.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-demo
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+kubectlG apply -f pvc-demo.yaml
+kubectlG get pvc -o wide
+kubectlG get pv -o wide
+kubectlG describe pv pvc-450a0a68-3bd3-41e3-bbb1-0065960c330f
+-- посмотрим диски в GCE
+gcloud compute disks list
+
+-- попробуем динамически увеличить размер до 3 Gb
+nano pvc-demo.yaml
+
+-- kubectlG CREATE -f pvc-demo.yaml
+kubectlG apply -f pvc-demo.yaml
+
+kubectlG get pvc -o wide
+kubectlG get pv -o wide
+-- заявка на 2, а диск на 3 %)
+
+kubectlG delete -f pvc-demo.yaml
+
+
+развернем кубик от Севералнайнс
+https://severalnines.com/database-blog/using-kubernetes-deploy-postgresql
+
+-- по умолчанию ReadWriteMany
+-- не работает, поставим ReadWriteOnce и уберем маунт на локальный диск /mnt/data и убираем сторадж моде
+
+nano postgres-configmap.yaml
+nano postgres-storage.yaml
+nano postgres-deployment.yaml
+nano postgres-service.yaml
+
+
+kubectlG apply -f postgres-configmap.yaml -f postgres-storage.yaml -f postgres-deployment.yaml -f postgres-service.yaml
+-- не работает
+-- error: unable to recognize "postgres-deployment.yaml": no matches for kind "Deployment" in version "extensions/v1beta1"
+apiVersion: extensions/v1beta1  -> apps/v1
+nano postgres-deployment.yaml
+kubectlG apply -f postgres-deployment.yaml
+
+-- error: error validating "postgres-deployment.yaml": error validating data: ValidationError(Deployment.spec): 
+-- missing required field "SELECTor" in io.k8s.api.apps.v1.DeploymentSpec;
+nano postgres-deployment.yaml
+
+  SELECTor:
+    matchLabels:
+      app: postgres
+
+kubectlG apply -f postgres-deployment.yaml
+
+kubectlG get all
+
+kubectlG exec -it pod/postgres-5746888c6d-p9zmt bash
+df
+/dev/sdb 5гб
+psql -U postgres
+CREATE DATABASE test;
+
+nano postgres-storage.yaml
+-- увеличиваем
+kubectlG apply -f postgres-storage.yaml
+kubectlG get pvc -o wide
+kubectlG get pv -o wide
+-- посмотрим, что изменилось
+kubectlG exec -it pod/postgres-5746888c6d-p9zmt bash
+-- ничего не изменилось %(
+mount -f 
+-- и вуаля %)
+df
+psql -U postgres
+\l
+
+
+-- для получения доступа
+kubectlG port-forward pod/postgres-5746888c6d-p9zmt bash 5432:5432
+-- или
+kubectlG port-forward service/postgres 5432:5432
+
+-- пароль 123admin
+psql -h localhost -U postgresadmin --password -p 5432 postgresdb
+
+kubectlG get nodes -o wide
+
+-- Для доступа извне нужно юзать LoadBalancer. NodePort только для доступа изнутри GCP
+kubectlG get all
+-- видим нет внешнего ip
+-- посмотрим СТАРЫЙ лоад балансер
+nano postgres-service.yaml
+-- посмотрим лоад балансер
+nano postgres-service2.yaml
+kubectlG apply -f postgres-service2.yaml
+psql -h 34.68.49.226 -U postgresadmin --password -p 5432 postgresdb
+
+
+kubectlG delete all --all
+-- не забываем про:
+kubectlG delete pvc --all
+kubectlG delete cm --all
+kubectlG delete secrets --all
+
+-- настроим Citus руками в кубере
+-- первоначально настроим кластер
+-- gcloud container clusters CREATE citus --machine-type n1-standard-1 --zone us-central1-a
+-- вспоминаем, что с нодами кластера
+kubectlG cluster-info
+kubectlG get nodes
+
+-- Citus в кубере нет, но один китаец таки смог:
+-- https://github.com/jinhong-/citus-k8s
+-- образ старый 7.3.0, но не бесполезный
+-- посмотрим скрипты
+cd citus
+nano secrets.yaml
+nano master.yaml
+nano workers.yaml
+
+!!! не забываем указывать -n для переноса строки - посмотрим разницу
+!!! echo 'otus321$' | base64
+!!! echo -n 'otus321$' | base64
+kubectlG CREATE -f secrets.yaml
+kubectlG CREATE -f master.yaml
+-- чуть позже запускаем, после создания мастера
+-- есть вероятность, что kubectlG apply -f . не отработает
+kubectlG get all
+kubectlG CREATE -f workers.yaml
+
+-- обратите внимание, что мастер имеет случайное название, на воркеры строго определенное
+kubectlG get all
+
+kubectlG exec -it pod/citus-master-74fb74646c-c5tvz -- bash
+psql -U postgres
+
+
+
+-- Заапргейдим наш цитус, добавив лоад балансер и еще 1 ноду
+kubectlG delete -f .
+kubectlG get pvc
+kubectlG get secrets
+gcloud compute disks list
+cd ../citus_LB
+kubectlG CREATE -f secrets.yaml
+kubectlG CREATE -f master.yaml
+
+-- не получилось...
+kubectlG delete all --all && kubectlG delete pvc --all && kubectlG delete cm --all && kubectlG delete secrets --all
+
+
+-- посмотреть секреты
+kubectlG get secret citus-secrets -o yaml
+-- ждем чутка
+kubectlG CREATE -f workers.yaml
+
+-- пароль otus321$
+-- посмотреть 
+echo 'b3R1czMyMSQ=' | base64 -d
+psql -h 34.123.30.34 -U postgres --password -p 5432
+SELECT * FROM master_get_active_worker_nodes();
+
+
+-- добавим еще 1 ноду, для этого просто отредактируем стейтфул сет
+nano workers.yaml
+kubectlG apply -f workers.yaml
+
+
+kubectlG get all
+psql -h 34.123.30.34 -U postgres --password -p 5432
+SELECT * FROM master_get_active_worker_nodes();
+
+
+-- посмотрим на сборки Цитуса
+-- https://hub.docker.com/r/citusdata/citus/
+
+-- если мы просто удалим наш деплоймент kubectlG delete -f . , pvc все равно остануться
+
+-- после попыток развернуть 9.4.0 вернулся к 7.3.0
+kubectlG logs pod/citus-master-68959cc849-btn9l
+2020-08-18 10:26:24.838 UTC [1] FATAL:  DATABASE files are incompatible with server
+2020-08-18 10:26:24.838 UTC [1] DETAIL:  The data directory was initialized by PostgreSQL version 12, which is not compatible with this version 10.3 (Debian 10.3-1.pgdg90+1).
+-- обязательно чистим pvc
+
+-- проблема в версии > 8.0.0 идет добавление по HOSTNAME, а там добавляется в образ хуки на постсоздание
+-- и они не видят кластер, а так как контенер без хуков не заканчивает сборку, hostname тоже не получается
+ if [ ${POD_IP} ]; then psql --host=citus-master --username=postgres 
+ --command="SELECT * FROM master_add_node('${HOSTNAME}.citus-workers', 5432);" ; fi 
+
+-- поэтому сделал версию с заменой HOSTNAME на POD_IP
+-- но нужно потом решить проблему со сменой ip - поменять имена нод
+
+?? uname -n
+
+gcloud container clusters delete citus --zone us-central1-c
+--посмотрим, что осталось от кластера
+gcloud compute disks list
