@@ -9,7 +9,12 @@
 8. https://www.percona.com/blog/2018/10/02/scaling-postgresql-using-connection-poolers-and-load-balancers-for-an-enterprise-grade-environment/
 9. https://www.citusdata.com/blog/2019/05/30/introducing-pg-auto-failover/
 10. https://github.com/EnterpriseDB/repmgr
-11. 
+11. https://patroni.readthedocs.io/en/latest/
+12. https://github.com/sorintlab/stolon
+13. https://www.slony.info/
+14. https://severalnines.com/database-blog/how-deploy-postgresql-high-availability
+15. https://www.percona.com/blog/2018/10/02/scaling-postgresql-using-connection-poolers-and-load-balancers-for-an-enterprise-grade-environment/
+16. 
 
 https://habr.com/ru/post/518216/
 
