@@ -1,19 +1,19 @@
 -- HA clusters
-PostgresHA GKE - уменьшаем мощность машины и указываем только 1 зону 1 региона, иначе не влезем в бесплатную квоту
+-- PostgresHA GKE - уменьшаем мощность машины и указываем только 1 зону 1 региона, иначе не влезем в бесплатную квоту
 
-gcloud beta container --project "celtic-house-266612" clusters CREATE "postgresha" --zone "us-central1-c" --no-enable-basic-auth --cluster-version "1.17.14-gke.400" --release-channel "regular" --machine-type "e2-medium" --image-type "COS" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --scopes "https://www.googleapis.com/auth/devstorage.read_only","https://www.googleapis.com/auth/logging.write","https://www.googleapis.com/auth/monitoring","https://www.googleapis.com/auth/servicecontrol","https://www.googleapis.com/auth/service.management.readonly","https://www.googleapis.com/auth/trace.append" --preemptible --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/celtic-house-266612/global/networks/default" --subnetwork "projects/celtic-house-266612/regions/us-central1/subnetworks/default" --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0
+gcloud beta container --project "celtic-house-266612" clusters create "postgresha" --zone "us-central1-c" --no-enable-basic-auth --cluster-version "1.19.9-gke.1900" --release-channel "None" --machine-type "e2-medium" --image-type "COS_CONTAINERD" --disk-type "pd-ssd" --disk-size "30" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --preemptible --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/celtic-house-266612/global/networks/default" --subnetwork "projects/celtic-house-266612/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "us-central1-c"
 
-NAME         LOCATION       MASTER_VERSION  MASTER_IP      MACHINE_TYPE   NODE_VERSION   NUM_NODES  STATUS
-postgresha  us-central1-a  1.15.12-gke.2   35.194.20.164  n1-standard-1  1.15.12-gke.2  3          RUNNING
+NAME        LOCATION       MASTER_VERSION   MASTER_IP      MACHINE_TYPE  NODE_VERSION     NUM_NODES  STATUS
+postgresha  us-central1-c  1.19.9-gke.1900  35.194.59.184  e2-medium     1.19.9-gke.1900  3          RUNNING
 
 gcloud container clusters list
-kubectlG get nodes
--- kubectlG get all -- ошибка, нужно переинициализировать кластер, если делать через веб интерфейс
+kubectl get nodes
+-- kubectl get all -- ошибка, нужно переинициализировать кластер, если делать через веб интерфейс
 -- https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl
-gcloud container clusters get-credentials postgresha --zone us-central1-c
+-- gcloud container clusters get-credentials postgresha --zone us-central1-c
 
-helmG repo add bitnami https://charts.bitnami.com/bitnami
-helmG install pgsql-ha bitnami/postgresql-ha
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install pgsql-ha bitnami/postgresql-ha
 
 
 PostgreSQL can be accessed through Pgpool via port 5432 on the following DNS name FROM within your cluster:
@@ -30,58 +30,39 @@ To connect to your DATABASE FROM outside the cluster execute the following comma
     kubectl port-forward --namespace default svc/pgsql-ha-postgresql-ha-pgpool 5432:5432 &
     psql -h 127.0.0.1 -p 5432 -U postgres -d postgres
 
-kubectlG get all -A
-kubectlG get pods
-kubectlG get pv
-kubectlG get all -o wide
+kubectl get all -A
+kubectl get pods
+kubectl get pv
+kubectl get all -o wide
 gcloud compute disks list
 
 -- достанем пароль
-export POSTGRES_PASSWORD=$(kubectlG get secret --namespace default pgsql-ha-postgresql-ha-postgresql -o jsonpath="{.data.postgresql-password}" | base64 --decode)
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace default pgsql-ha-postgresql-ha-postgresql -o jsonpath="{.data.postgresql-password}" | base64 --decode)
 echo $POSTGRES_PASSWORD
-kubectlG port-forward --namespace default svc/pgsql-ha-postgresql-ha-pgpool 5432:5432
+kubectl port-forward --namespace default svc/pgsql-ha-postgresql-ha-pgpool 5432:5432
 -- сразу без ввода пароля интерактивно
-PGPASSWORD=UFCNKiZP0C psql -h 127.0.0.1 -p 5432 -U postgres -d postgres
+PGPASSWORD=W8gBnN9UEb psql -h 127.0.0.1 -p 5432 -U postgres -d postgres
 
--- убьем мастер
-
-kubectlG delete pod/pgsql-ha-postgresql-ha-postgresql-0
-
--- pod "my-release-postgresql-ha-postgresql-0" deleted
--- aeugene@Aeuge:/mnt/c/Users/arist$ PGPASSWORD=XU4snjIYYh psql -h 127.0.0.1 -p 5432 -U postgres -d postgres
--- psql: error: could not connect to server: FATAL:  failed to CREATE a backend 0 connection
--- DETAIL:  not executing failover because failover_on_backend_error is off
--- в новой версии починили %)
-
-
--- убьем слейв
-kubectlG delete pod/pgsql-ha-postgresql-ha-postgresql-1
--- тоже самое
--- https://www.pgpool.net/docs/latest/en/html/runtime-config-failover.html
-
--- зайдем на подик
-kubectlG exec -it pod/pgsql-ha-postgresql-ha-pgpool-77b655c74d-lj92j -- bash
+-- зайдем на pgpool
+kubectl exec -it pod/pgsql-ha-postgresql-ha-pgpool-56458bdc5d-82kkw -- bash
+cat /opt/bitnami/pgpool/conf/pgpool.conf
 -- настройка pgpool
 -- http://support.ptc.com/help/thingworx_hc/thingworx_8_hc/ru/index.html#page/ThingWorx/Help/ThingWorxHighAvailability/InstallingandConfiguringPostgreSQLHA.html
- find / -name pgpool.conf
- -- /opt/bitnami/pgpool/conf/pgpool.conf
+
 
 -- как добавить внешний лоад балансер?
+export POSTGRES_PASSWORD=$(kubectl get secret --namespace default pgsql-ha-postgresql-ha-postgresql -o jsonpath="{.data.postgresql-password}" | base64 --decode)
+export REPMGR_PASSWORD=$(kubectl get secret --namespace "default" pgsql-ha-postgresql-ha-postgresql -o jsonpath="{.data.repmgr-password}" | base64 --decode)
+export ADMIN_PASSWORD=$(kubectl get secret --namespace "default" pgsql-ha-postgresql-ha-pgpool -o jsonpath="{.data.admin-password}" | base64 --decode)
 
-helmG upgrade pgsql-ha bitnami/postgresql-ha --set service.type=LoadBalancer
+helm upgrade pgsql-ha bitnami/postgresql-ha --set service.type=LoadBalancer --set postgresql.password=$POSTGRES_PASSWORD --set postgresql.repmgrPassword=$REPMGR_PASSWORD --set pgpool.adminPassword=$ADMIN_PASSWORD
 
--- NOTE: It may take a few minutes for the LoadBalancer IP to be available.
--- Watch the status with: 'kubectl get svc --namespace default -w pgsql-ha-postgresql-ha-pgpool
-kubectlG get all
-
-export SERVICE_IP=$(kubectlG get svc --namespace default pgsql-ha-postgresql-ha-pgpool --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
--- export POSTGRES_PASSWORD=$(kubectlG get secret --namespace default pgsql-ha-postgresql-ha-postgresql -o jsonpath="{.data.postgresql-password}" | base64 --decode)
+export SERVICE_IP=$(kubectl get svc --namespace default pgsql-ha-postgresql-ha-pgpool --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
 echo $SERVICE_IP
-echo $POSTGRES_PASSWORD
-PGPASSWORD=UFCNKiZP0C psql -h $SERVICE_IP -p 5432 -U postgres -d postgres
--- PGPASSWORD="$POSTGRES_PASSWORD" psql -h $SERVICE_IP -p 5432 -U postgres -d postgres
+PGPASSWORD=W8gBnN9UEb psql -h $SERVICE_IP -p 5432 -U postgres -d postgres
 
-gcloud container clusters list
+
 gcloud container clusters delete postgresha --zone us-central1-c
 
 --посмотрим, что осталось от кластера
+gcloud compute disks list
