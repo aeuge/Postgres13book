@@ -34,8 +34,7 @@
 33. https://habr.com/ru/post/504044/
 34. https://patroni.readthedocs.io/en/latest/replication_modes.html
 35. https://postgres-operator.readthedocs.io/en/latest/administrator/#load-balancers-and-allowed-ip-ranges
-36. 
 
-
+bonus 
 https://habr.com/ru/post/518216/
 https://habr.com/ru/company/oleg-bunin/blog/489206/
