@@ -26,11 +26,16 @@
 25. https://kubernetes.io/ru/docs/tutorials/kubernetes-basics/update/update-intro/
 26. https://aws.amazon.com/ru/ebs/
 27. https://aws.amazon.com/ru/s3/
-
-
-https://habr.com/ru/post/504044/
-
+28. https://habr.com/ru/post/258285/
+29. https://en.wikipedia.org/wiki/Distributed_control_system
+30. https://etcd.io/
+31. https://www.consul.io/
+32. https://zookeeper.apache.org/
+33. https://habr.com/ru/post/504044/
+34. https://patroni.readthedocs.io/en/latest/replication_modes.html
+35. https://postgres-operator.readthedocs.io/en/latest/administrator/#load-balancers-and-allowed-ip-ranges
+36. 
 
 
 https://habr.com/ru/post/518216/
-
+https://habr.com/ru/company/oleg-bunin/blog/489206/

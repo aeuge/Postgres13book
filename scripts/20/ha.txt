@@ -66,3 +66,117 @@ gcloud container clusters delete postgresha --zone us-central1-c
 
 --посмотрим, что осталось от кластера
 gcloud compute disks list
+
+
+-- Patroni
+Postgres operator GKE - уменьшаем мощность машины и указываем только 1 зону 1 региона, иначе не влезем в бесплатную квоту
+
+gcloud beta container --project "celtic-house-266612" clusters create "postgresoperator" --zone "us-central1-c" --no-enable-basic-auth --cluster-version "1.19.9-gke.1900" --release-channel "None" --machine-type "e2-medium" --image-type "COS_CONTAINERD" --disk-type "pd-ssd" --disk-size "30" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --preemptible --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/celtic-house-266612/global/networks/default" --subnetwork "projects/celtic-house-266612/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "us-central1-c"
+
+NAME              LOCATION       MASTER_VERSION   MASTER_IP       MACHINE_TYPE  NODE_VERSION     NUM_NODES  STATUS
+postgresoperator  us-central1-c  1.19.9-gke.1900  34.136.139.222  e2-medium     1.19.9-gke.1900  3          RUNNING
+
+-- postgres operator
+-- посмотрим существующие уже ресурсы
+kubectl api-resources
+
+git clone https://github.com/zalando/postgres-operator
+cd postgres-operator
+helm install postgres-operator ./charts/postgres-operator
+
+-- убедимся, что postgres-operator стартовал:
+kubectl --namespace=default get pods -l "app.kubernetes.io/name=postgres-operator"
+
+-- посмотрим, что ресурс постгрес появился
+kubectl api-resources | grep postgres
+
+-- поставим UI к постгрес оператору
+helm install postgres-operator-ui ./charts/postgres-operator-ui
+
+-- To verify that postgres-operator has started, run:
+kubectl --namespace=default get pods -l "app.kubernetes.io/name=postgres-operator-ui"
+
+kubectl get all
+kubectl port-forward svc/postgres-operator-ui 8081:80
+
+-- создадим кластер через UI
+name - minimal
+instances - 2
+галочка на pg_bouncer
+
+-- посмотрим как развернулось
+kubectl get all
+
+kubectl get node gke-postgresoperator-default-pool-6328232a-xd21 -o wide
+gcloud compute disks list
+
+-- сколько задействовано ресурсов
+kubectl top node gke-postgresoperator-default-pool-6328232a-xd21
+
+
+-- Connect to the Postgres cluster via psql
+-- You can create a port-forward on a database pod to connect to Postgres. 
+-- See the USER guide for instructions. With minikube it's also easy to retrieve the connections string 
+-- FROM the K8s service that is pointing to the master pod:
+
+export PGHOST="35.224.211.219"
+export PGPORT="5432"
+
+-- Retrieve the password FROM the K8s Secret that is CREATEd in your cluster. Non-encrypted connections are rejected by default, so set the SSL mode to require:
+
+export PGPASSWORD=$(kubectl get secret postgres.acid-minimal.credentials.postgresql.acid.zalan.do -o 'jsonpath={.data.password}' | base64 -d)
+echo $PGPASSWORD
+export PGSSLMODE=require
+-- извне доступ не получим, так как не указали создание Load Balancer
+T8O31SPWUx1QUnBP7BHXiwLWz29rFxGCNc5mbTwZ0UCRaPhwuXdwulMsrl4myOvm
+psql -U postgres
+
+-- не сработало..
+-- https://postgres-operator.readthedocs.io/en/latest/administrator/#load-balancers-and-allowed-ip-ranges
+
+!!-- возможно селекторы неправильно у сервиса указаны
+!! kubectl get pods -l spilo-role -L spilo-role
+
+kubectl port-forward service/acid-minimal-pooler 5432:5432
+-- pod/acid-minimal-pooler-6699dc666c-hfncx   0/1     Pending   0          2m3s
+
+-- уменьшим требования
+kubectl describe pod/acid-minimal-pooler-6699dc666c-hfncx
+-- Warning  FailedScheduling  61s (x4 over 3m52s)  default-scheduler  0/3 nodes are available: 3 Insufficient cpu.
+kubectl edit replicaset.apps/acid-min-pooler-7cc95d44fb
+-- меняем деплоймент или репликасет???
+
+kubectl port-forward service/acid-min-pooler 5432:5432
+
+
+psql -U postgres -h localhost
+SELECT inet_server_addr();
+\l
+
+-- зайдем на мастера
+kubectl exec -it pod/acid-minimal-0 -- bash
+psql -U postgres
+
+patronictl -c postgres.yml list
+
+-- зайдем на пулер
+kubectl exec -it pod/acid-minimal-pooler-79d8cd5646-8gw6q -- psql -U postgres -h localhost sslmode=require -W
+
+kubectl exec -it pod/acid-minimal-pooler-79d8cd5646-8gw6q -- sh
+df
+pwd
+netstat -a
+pgbouncer -h
+ps
+
+
+??-- убьем мастер
+kubectl delete pod/acid-minimal-0
+
+
+gcloud container clusters list
+gcloud container clusters delete postgresoperator --zone us-central1-c
+
+--посмотрим, что осталось от кластера
+
+
