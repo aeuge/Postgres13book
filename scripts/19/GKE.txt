@@ -4,6 +4,94 @@ cat pod.yaml
 -- simple replicaset
 cat rs.yaml
 
+-- apply config for replicaset
+kubectl apply -f rs.yaml
+kubectl get all
+
+kubectl delete pod hello-rs-demo-9b7rp
+kubectl get all
+
+-- show labels
+kubectl get pods --show-labels
+
+-- delete label
+kubectl label pod hello-rs-demo-9cdsp app-
+kubectl get pods --show-labels
+
+-- look inside pod
+kubectl describe pod hello-rs-demo-9cdsp
+
+-- delete replicaset
+kubectl delete rs hello-rs-demo
+
+-- delete pod
+kubectl delete pod hello-rs-demo-9cdsp
+
+
+-- deployment
+cat deployment.yaml
+kubectl apply -f deployment.yaml
+kubectl get all
+
+
+kubectl set image deployment/hello-deployment hello-py=aristoveugene/hello-py:v2 --record
+kubectl get all
+
+-- view history
+kubectl rollout history deployment/hello-deployment
+
+-- rollback deployment
+kubectl rollout undo deployment hello-deployment
+kubectl get all
+
+-- increase number of replicas
+kubectl scale deployment hello-deployment --replicas=4
+kubectl get all
+
+kubectl delete deployment hello-deployment
+
+-- service
+cat service.yaml
+
+kubectl apply -f deployment.yaml -f service.yaml
+kubectl get all
+
+-- можно прокинуть порт на хостовую машину
+kubectl port-forward svc/hello-service 10000:9000
+curl http://127.0.0.1:10000/
+
+-- Service discovery
+kubectl run -it --rm busybox --image=busybox
+env | grep HELLO
+wget -qO- http://hello-service.myapp:9000/
+
+INGRESS
+-- with helm
+cat nginx-ingress.yaml
+kubectl create namespace monitoring
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
+helm repo update
+helm install nginx ingress-nginx/ingress-nginx --namespace monitoring -f nginx-ingress.yaml
+kubectl get pods -n monitoring
+
+
+cat ingress.yaml
+kubectl apply -f ingress.yaml
+kubectl get ing
+
+-- Если просто урлу пойти, то будет 404, потому что Host-а нет.
+minikube ip
+curl http://192.168.1.89/myapp
+
+curl -H 'Host: hello.world' http://192.168.1.89/myapp
+
+-- можем прописать в хостах
+sudo nano /etc/hosts
+curl http://hello.world/myapp
+
+
+
+
 -- создаем вручную кластер, смотрим на параметры
 gcloud container clusters list
 kubectlG get all
