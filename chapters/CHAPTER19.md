@@ -25,7 +25,15 @@
 24. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
 25. https://12factor.net/
 26. https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
-27. https://en.wikipedia.org/wiki/Base64
+27. https://kubernetes.io/docs/concepts/configuration/secret/
+28. https://en.wikipedia.org/wiki/Base64
+29. https://severalnines.com/
+30. https://cloud.google.com/kubernetes-engine
+31. https://cloud.google.com/kubernetes-engine/docs/concepts/storage-overview
+32. https://cloud.google.com/compute/docs/disks
+33. https://cloud.google.com/kubernetes-engine/docs/concepts/persistent-volumes
+34. https://severalnines.com/database-blog/using-kubernetes-deploy-postgresql
+
 
 
 

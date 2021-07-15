@@ -147,54 +147,15 @@ kubectl get pv
 
 -- GKE
 -- создаем вручную кластер, смотрим на параметры
+
+
 gcloud container clusters list
 kubectlG get all
--- если делать через веб интерфейс ошибка, нужно переинициализировать кластер
--- так как мы делали кластер не через gcloud, доступ мы не получим
--- нужно прописать теперь контекст
--- https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl
 
-gcloud container clusters get-credentials citus --zone us-central1-c
 -- посмотрим дефолтный тип стораджа
 kubectlG get storageclasses
--- можем сделать свой - например для внешних дисков и т.д.
 
-cd /mnt/c/download/pg25
-nano pvc-demo.yaml
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc-demo
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-
-kubectlG apply -f pvc-demo.yaml
-kubectlG get pvc -o wide
-kubectlG get pv -o wide
-kubectlG describe pv pvc-450a0a68-3bd3-41e3-bbb1-0065960c330f
--- посмотрим диски в GCE
-gcloud compute disks list
-
--- попробуем динамически увеличить размер до 3 Gb
-nano pvc-demo.yaml
-
--- kubectlG CREATE -f pvc-demo.yaml
-kubectlG apply -f pvc-demo.yaml
-
-kubectlG get pvc -o wide
-kubectlG get pv -o wide
--- заявка на 2, а диск на 3 %)
-
-kubectlG delete -f pvc-demo.yaml
-
-
-развернем кубик от Севералнайнс
-https://severalnines.com/database-blog/using-kubernetes-deploy-postgresql
+-- развернем кубик от Севералнайнс
 
 -- по умолчанию ReadWriteMany
 -- не работает, поставим ReadWriteOnce и уберем маунт на локальный диск /mnt/data и убираем сторадж моде
