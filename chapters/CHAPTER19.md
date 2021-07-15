@@ -22,7 +22,11 @@
 21. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
 22. https://kubernetes.io/docs/concepts/storage/volumes/
 23. https://kubernetes.io/docs/concepts/storage/persistent-volumes/
-24. 
+24. https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims
+25. https://12factor.net/
+26. https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
+27. https://en.wikipedia.org/wiki/Base64
+
 
 
 bonus
