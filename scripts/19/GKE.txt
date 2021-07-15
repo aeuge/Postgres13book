@@ -63,9 +63,10 @@ curl http://127.0.0.1:10000/
 -- Service discovery
 kubectl run -it --rm busybox --image=busybox
 env | grep HELLO
-wget -qO- http://hello-service.myapp:9000/
 
-INGRESS
+wget -qO- http://hello-service.default:9000/
+
+-- INGRESS
 -- with helm
 cat nginx-ingress.yaml
 kubectl create namespace monitoring

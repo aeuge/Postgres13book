@@ -11,7 +11,9 @@
 10. https://kubernetes.io/ru/docs/tasks/tools/install-kubectl/
 11. https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 12. https://kubernetes.io/docs/concepts/services-networking/service/
-13. 
+13. https://en.wikipedia.org/wiki/Fully_qualified_domain_name
+14. https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+15. 
 
 
 bonus
