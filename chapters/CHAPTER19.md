@@ -12,8 +12,17 @@
 11. https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 12. https://kubernetes.io/docs/concepts/services-networking/service/
 13. https://en.wikipedia.org/wiki/Fully_qualified_domain_name
-14. https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-15. 
+14. https://kubernetes.io/ru/docs/concepts/overview/working-with-objects/namespaces/
+15. https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+16. https://kubernetes.io/docs/concepts/services-networking/ingress/
+17. https://helm.sh/
+18. https://helm.sh/docs/intro/install/
+19. https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
+20. https://kubernetes.github.io/ingress-nginx/
+21. https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
+22. https://kubernetes.io/docs/concepts/storage/volumes/
+23. https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+24. 
 
 
 bonus

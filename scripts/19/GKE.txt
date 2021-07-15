@@ -66,30 +66,193 @@ env | grep HELLO
 
 wget -qO- http://hello-service.default:9000/
 
+--namespace
+kubectl get all -A
+
 -- INGRESS
--- with helm
+-- install with helm
 cat nginx-ingress.yaml
 kubectl create namespace monitoring
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx/
 helm repo update
 helm install nginx ingress-nginx/ingress-nginx --namespace monitoring -f nginx-ingress.yaml
-kubectl get pods -n monitoring
+kubectl get all -n monitoring
 
-
+-- add ingress
 cat ingress.yaml
 kubectl apply -f ingress.yaml
 kubectl get ing
 
 -- Если просто урлу пойти, то будет 404, потому что Host-а нет.
 minikube ip
-curl http://192.168.1.89/myapp
+curl http://192.168.1.73/myapp
 
-curl -H 'Host: hello.world' http://192.168.1.89/myapp
+curl -H 'Host: hello.world' http://192.168.1.73/myapp
 
 -- можем прописать в хостах
 sudo nano /etc/hosts
 curl http://hello.world/myapp
 
+
+-- STATEFULSETS
+
+-- Сначала удалим все. 
+
+kubectl delete all --all
+cd ../manifests2
+
+-- Для постгреса сделаем такой stateful сет 
+cat postgres.yaml
+
+VolumeClaimTemplate - это шаблон запроса на persistent volume. 
+
+-- Прямо сейчас нет ни persistent volume (хранилища), 
+kubectl get pv
+-- ни persistent volume claim (запроса на хранилище)
+kubectl get pvc
+
+-- Для того, чтобы запросы на хранилище обрабатывались автоматически, существует специальный контроллер  
+-- storage provisioner. Он подчищает persistent volume, после удаления запроса, 
+-- и он выделяет persistent volume и связывает его запросом. 
+
+--delete protected pv pvc
+kubectl edit pvc data-app-postgresql-0
+Finalizers:    [kubernetes.io/pvc-protection] -- set # in the first char
+
+minikube addons list
+
+-- применяем манифест. 
+kubectl apply -f postgres.yaml
+
+kubectl get all
+
+-- Видим, что создался persistent volume и привзяался к pvc 
+kubectl get pv
+kubectl get pvc
+
+-- Теперь можем зайти в БД по кредам, которые оставляли в ENV переменных контейнера. 
+env:
+          - name: POSTGRES_DB
+            value: myapp
+          - name: POSTGRES_USER
+            value: myuser
+          - name: POSTGRES_PASSWORD
+            value: passwd
+
+minikube service postgres -n myapp --url
+
+psql -h 192.168.1.89 -p 31383 -U myUSER -W myapp
+
+-- Если удалим под, он все-равно создастся, и данные все равно будут доступны. 
+kubectl delete pod postgres-statefulset-0
+
+kubectl get all
+
+-- под пересоздался
+psql -h 192.168.1.89 -p 31688 -U myUSER -W myapp
+
+-- даже при удалении стейтфуллсет данные остануться на месте
+kubectl delete -f postgres.yaml
+
+kubectl get pvc
+kubectl get pv
+
+
+
+CONFIGURATION 
+
+https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
+
+https://kubernetes.io/docs/concepts/configuration/secret/
+
+-- Теперь давайте сконфигурируем приложение, чтобы оно работало вместе с БД.  
+
+cd app
+cat app.py
+cat requirements.txt
+
+-- билдим имадж
+docker build -t aristoveugene/hello-py:v3 .
+docker images
+
+-- запушим имадж в докерхаб
+-- https://hub.docker.com/repository/docker/aristoveugene/hello-py
+sudo docker push aristoveugene/hello-py:v3
+
+cd ..
+cat deployment.yaml
+cat service.yaml
+kubectl apply -f deployment.yaml 
+kubectl apply -f service.yaml
+
+kubectl get all
+
+
+Посмотрим, что отдает сервис.
+minikube service -n myapp --url hello-service
+curl -s http://192.168.1.89:32375/
+curl -s http://192.168.1.89:32375/config
+-- посмотрим в более красивом виде:
+curl -s http://192.168.1.89:32375/config | jq
+
+И он отдает те данные, которые мы создали в БД 
+curl -s http://192.168.1.89:32375/db | jq
+
+-- И если обновим данные в таблице БД
+minikube service postgres -n myapp --url
+psql -h 192.168.1.89 -p 32375 -U myUSER -W myapp
+CREATE TABLE client(id serial, name text);
+INSERT INTO client(name) values('Ivan');
+
+curl -s http://192.168.1.89:32375/db | jq
+
+-- Давайте теперь попробуем обновить env переменые у деплоймента. 
+kubectl set env deploy hello-deployment GREETING=Aloha
+-- Это сразу же приведет к пересозданию подов. 
+kubectl get pods
+curl -s http://192.168.1.89:31960/config | jq
+
+-- Хранить конфиги в деплойменте не очень хорошо. Потому что иногда хочется поменять конфиг
+-- без изменения деплоймента (например, если манифесты стороннего приложения). 
+-- для разных сред мы должны иметь один деплоймент, но разные конфигурации. 
+-- Чтобы конфигурации отделить от деплоймента, используется сущность ConfigMap в кубернетесе. 
+-- Перенесем конфигурации в config map.
+cat app-config.yaml
+
+cat deployment2.yaml
+-- удалим старый деплой и создадим новый и конфиг мэп
+kubectl delete -f deployment.yaml
+kubectl apply -f app-config.yaml
+kubectl apply -f deployment2.yaml
+
+kubectl get all
+curl -s http://192.168.1.89:32375/config | jq
+-- изменим в конфиге параметр
+nano app-config.yaml
+kubectl apply -f app-config.yaml
+curl -s http://192.168.1.89:32375/config | jq
+-- ничего не изменилось, так как конфигмэп по умолчанию сичтывается во время создания пода
+-- https://habr.com/ru/company/flant/blog/498970/
+
+
+-- Держать пароли в конфигах очень не секурно, поэтому для сенсетив данных используют секреты Secrets. 
+-- По сути это тот же конфигмап, просто значения заэнкожены в base64. 
+-- По сути это избавляет только от случайного подглядывания. 
+
+echo 'postgresql+psycopg2://myuser:passwd@postgres/myapp' | base64
+
+cat secrets.yaml
+cat app-config2.yaml
+cat deployment3.yaml
+
+kubectl delete -f app-config.yaml
+kubectl delete -f deployment2.yaml
+kubectl apply -f app-config2.yaml
+kubectl apply -f secrets.yaml
+kubectl apply -f deployment3.yaml
+
+curl -s http://192.168.1.89:32375/config | jq
+curl -s http://192.168.1.89:32375/db | jq
 
 
 
