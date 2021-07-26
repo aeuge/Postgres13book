@@ -146,90 +146,43 @@ kubectl get pv
 
 
 -- GKE
--- создаем вручную кластер, смотрим на параметры
-
+gcloud beta container --project "celtic-house-266612" clusters create "postgres" --zone "us-central1-c" --no-enable-basic-auth --cluster-version "1.19.9-gke.1900" --release-channel "None" --machine-type "e2-medium" --image-type "COS_CONTAINERD" --disk-type "pd-ssd" --disk-size "30" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --preemptible --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/celtic-house-266612/global/networks/default" --subnetwork "projects/celtic-house-266612/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "us-central1-c"
 
 gcloud container clusters list
-kubectlG get all
 
--- посмотрим дефолтный тип стораджа
-kubectlG get storageclasses
+-- развернем Постгрес в кубике от Севералнайнс
 
--- развернем кубик от Севералнайнс
 
+cat postgres-configmap.yaml
 -- по умолчанию ReadWriteMany
 -- не работает, поставим ReadWriteOnce и уберем маунт на локальный диск /mnt/data и убираем сторадж моде
-
-nano postgres-configmap.yaml
 nano postgres-storage.yaml
+
+cat postgres-storage.yaml
 nano postgres-deployment.yaml
-nano postgres-service.yaml
+cat postgres-service.yaml
 
 
-kubectlG apply -f postgres-configmap.yaml -f postgres-storage.yaml -f postgres-deployment.yaml -f postgres-service.yaml
--- не работает
--- error: unable to recognize "postgres-deployment.yaml": no matches for kind "Deployment" in version "extensions/v1beta1"
-apiVersion: extensions/v1beta1  -> apps/v1
-nano postgres-deployment.yaml
-kubectlG apply -f postgres-deployment.yaml
+kubectl apply -f postgres-configmap.yaml -f postgres-storage.yaml -f postgres-deployment.yaml -f postgres-service.yaml
 
--- error: error validating "postgres-deployment.yaml": error validating data: ValidationError(Deployment.spec): 
--- missing required field "SELECTor" in io.k8s.api.apps.v1.DeploymentSpec;
-nano postgres-deployment.yaml
+kubectl get all
 
-  SELECTor:
-    matchLabels:
-      app: postgres
-
-kubectlG apply -f postgres-deployment.yaml
-
-kubectlG get all
-
-kubectlG exec -it pod/postgres-5746888c6d-p9zmt bash
+kubectl exec -it pod/postgres-86d8848dd8-fdf7q bash
 df
-/dev/sdb 5гб
-psql -U postgres
+-- /dev/sdb 5гб
+psql -U postgresadmin -d postgres
 CREATE DATABASE test;
-
-nano postgres-storage.yaml
--- увеличиваем
-kubectlG apply -f postgres-storage.yaml
-kubectlG get pvc -o wide
-kubectlG get pv -o wide
--- посмотрим, что изменилось
-kubectlG exec -it pod/postgres-5746888c6d-p9zmt bash
--- ничего не изменилось %(
-mount -f 
--- и вуаля %)
-df
-psql -U postgres
 \l
 
-
 -- для получения доступа
-kubectlG port-forward pod/postgres-5746888c6d-p9zmt bash 5432:5432
--- или
-kubectlG port-forward service/postgres 5432:5432
-
--- пароль 123admin
-psql -h localhost -U postgresadmin --password -p 5432 postgresdb
-
-kubectlG get nodes -o wide
+kubectl port-forward service/postgres 5432:5432
 
 -- Для доступа извне нужно юзать LoadBalancer. NodePort только для доступа изнутри GCP
-kubectlG get all
--- видим нет внешнего ip
--- посмотрим СТАРЫЙ лоад балансер
-nano postgres-service.yaml
 -- посмотрим лоад балансер
-nano postgres-service2.yaml
-kubectlG apply -f postgres-service2.yaml
-psql -h 34.68.49.226 -U postgresadmin --password -p 5432 postgresdb
+cat postgres-service2.yaml
+kubectl apply -f postgres-service2.yaml
+psql -h 35.222.104.155 -U postgresadmin -W -d postgresdb
+\l
 
-
-kubectlG delete all --all
--- не забываем про:
-kubectlG delete pvc --all
-kubectlG delete cm --all
-kubectlG delete secrets --all
+kubectl delete all --all && kubectl delete pvc --all && kubectl delete cm --all && kubectl delete secrets --all
 
