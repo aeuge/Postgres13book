@@ -1,31 +1,59 @@
-cockroachDB in GCE
-Создал 3 VM - cockroach1, cockroach2, cockroach3
-gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach1 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach1 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
-gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach2 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach2 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
-gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach3 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach3 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+-- cockroachDB in GCE
+-- Создадим 3 VM - cockroach1, cockroach2, cockroach3
+gcloud beta compute --project=celtic-house-266612 instances create cockroach1 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach1 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud beta compute --project=celtic-house-266612 instances create cockroach2 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach2 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud beta compute --project=celtic-house-266612 instances create cockroach3 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach3 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
 
 gcloud compute ssh cockroach1
 gcloud compute ssh cockroach2
 gcloud compute ssh cockroach3
 
--- 19.2.6
--- wget -qO- https://binaries.cockroachdb.com/cockroach-v19.2.6.linux-amd64.tgz | tar  xvz && sudo cp -i cockroach-v19.2.6.linux-amd64/cockroach /usr/local/bin/ && sudo mkdir -p /opt/cockroach && sudo chown aeugene:aeugene /opt/cockroach
-
--- 20.2.4 sTABLE
-wget -qO- https://binaries.cockroachdb.com/cockroach-v20.2.4.linux-amd64.tgz | tar  xvz && sudo cp -i cockroach-v20.2.4.linux-amd64/cockroach /usr/local/bin/ && sudo mkdir -p /opt/cockroach && sudo chown aeugene:aeugene /opt/cockroach
+-- 21.1.6 stable
+wget -qO- https://binaries.cockroachdb.com/cockroach-v21.1.6.linux-amd64.tgz | tar  xvz && sudo cp -i cockroach-v21.1.6.linux-amd64/cockroach /usr/local/bin/ && sudo mkdir -p /opt/cockroach && sudo chown aeugene:aeugene /opt/cockroach
 
 -- стартуем ноды
-cockroach start --insecure --advertise-addr=cockroach1 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+-- --insecure OR generte certs
+mkdir certs my-safe-directory
+cockroach cert create-ca --certs-dir=certs --ca-key=my-safe-directory/ca.key
+cockroach cert create-node localhost cockroach1 cockroach2 cockroach3 --certs-dir=certs --ca-key=my-safe-directory/ca.key --overwrite
+cockroach cert create-client root --certs-dir=certs --ca-key=my-safe-directory/ca.key
 
-cockroach start --insecure --advertise-addr=cockroach2 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+-- list of certs
+cockroach cert list --certs-dir=certs
 
-cockroach start --insecure --advertise-addr=cockroach3 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+-- on notebook
+gcloud compute instances list
+scp -r aeugene@34.135.114.75:/home/aeugene/certs /mnt/c/download
+scp -r /mnt/c/download/certs aeugene@34.123.92.244:/home/aeugene
+scp -r /mnt/c/download/certs aeugene@35.192.96.158:/home/aeugene
+
+
+
+-- on node1
+cockroach start --certs-dir=certs --advertise-addr=cockroach1 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+
+
+-- on node2
+chmod 700 certs/*
+ls -l certs/
+cockroach start --certs-dir=certs --advertise-addr=cockroach2 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+
+-- on node 3
+chmod 700 certs/*
+cockroach start --certs-dir=certs --advertise-addr=cockroach3 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+
+-- for more security
+-- https://www.cockroachlabs.com/docs/v21.1/secure-a-cluster.html
+
+-- logs
+tail /home/aeugene/cockroach-data/logs/cockroach.log
+
 
 -- инициализируем кластер
-cockroach init --insecure --host=cockroach1
+cockroach init --certs-dir=certs --host=cockroach1
 
 -- зайдем клиентом
-cockroach sql --insecure
+cockroach sql --certs-dir=certs
 
 \l
 > CREATE DATABASE bank;
@@ -35,7 +63,7 @@ cockroach sql --insecure
 > show databases;
 
 -- добавим 4 ноду 
-gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach4 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach4 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud beta compute --project=celtic-house-266612 instances create cockroach4 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach4 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
 
 gcloud compute ssh cockroach4
 
