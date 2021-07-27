@@ -1,0 +1,106 @@
+cockroachDB in GCE
+Создал 3 VM - cockroach1, cockroach2, cockroach3
+gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach1 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach1 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach2 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach2 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach3 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach3 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+
+gcloud compute ssh cockroach1
+gcloud compute ssh cockroach2
+gcloud compute ssh cockroach3
+
+-- 19.2.6
+-- wget -qO- https://binaries.cockroachdb.com/cockroach-v19.2.6.linux-amd64.tgz | tar  xvz && sudo cp -i cockroach-v19.2.6.linux-amd64/cockroach /usr/local/bin/ && sudo mkdir -p /opt/cockroach && sudo chown aeugene:aeugene /opt/cockroach
+
+-- 20.2.4 sTABLE
+wget -qO- https://binaries.cockroachdb.com/cockroach-v20.2.4.linux-amd64.tgz | tar  xvz && sudo cp -i cockroach-v20.2.4.linux-amd64/cockroach /usr/local/bin/ && sudo mkdir -p /opt/cockroach && sudo chown aeugene:aeugene /opt/cockroach
+
+-- стартуем ноды
+cockroach start --insecure --advertise-addr=cockroach1 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+
+cockroach start --insecure --advertise-addr=cockroach2 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+
+cockroach start --insecure --advertise-addr=cockroach3 --join=cockroach1,cockroach2,cockroach3 --cache=.25 --max-sql-memory=.25 --background
+
+-- инициализируем кластер
+cockroach init --insecure --host=cockroach1
+
+-- зайдем клиентом
+cockroach sql --insecure
+
+\l
+> CREATE DATABASE bank;
+
+-- посмотрим с других нод
+
+> show databases;
+
+-- добавим 4 ноду 
+gcloud beta compute --project=celtic-house-266612 instances CREATE cockroach4 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210119a --image-project=ubuntu-os-cloud --boot-disk-size=50GB --boot-disk-type=pd-ssd --boot-disk-device-name=cockroach4 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+
+gcloud compute ssh cockroach4
+
+wget -qO- https://binaries.cockroachdb.com/cockroach-v20.2.4.linux-amd64.tgz | tar  xvz && sudo cp -i cockroach-v20.2.4.linux-amd64/cockroach /usr/local/bin/ && sudo mkdir -p /opt/cockroach && sudo chown aeugene:aeugene /opt/cockroach
+
+cockroach start --insecure --background --pid-file=/opt/cockroach/cockroach.pid --store=/opt/cockroach/store --advertise-addr=cockroach4 --join=cockroach1,cockroach2,cockroach3
+
+-- проверим
+ps aux | grep cockroach| grep -Ev "grep"
+cockroach node status --insecure
+
+cockroach sql --insecure
+
+> use bank;
+> CREATE TABLE if not exists items (itemname varchar(128) primary key, price decimal(19,4), quantity int);
+> import INTO items (itemname, price, quantity) CSV DATA ('gs://pg202101/cockroachdb.csv') WITH DELIMITER = E'\t';
+
+> CREATE TABLE test (
+    Region VARCHAR(50),
+    Country VARCHAR(50),
+    ItemType VARCHAR(50),
+    SalesChannel VARCHAR(20),
+    OrderPriority VARCHAR(10),
+    OrderDate VARCHAR(10),
+    OrderID int,
+    ShipDate VARCHAR(10),
+    UnitsSold int,
+    UnitPrice decimal(12,2),
+    UnitCost decimal(12,2),
+    TotalRevenue decimal(12,2),
+    TotalCost decimal(12,2),
+    TotalProfit decimal(12,2)
+);
+> import INTO test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) CSV DATA ('gs://pg202101/100SalesRecords.csv') WITH DELIMITER = ',', SKIP = '1';
+
+
+-- за сколько загрузится 1 000 000? 125Мб
+> import INTO test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) CSV DATA ('gs://pg202101/1000000SalesRecords.csv') WITH DELIMITER = ',', SKIP = '1';
+
+> SELECT count(*) FROM test WHERE unitssold=124;
+> CREATE index test_idx on test(unitssold);
+
+
+-- грохнем 2 ноды
+ps aux | grep cockroach| grep -Ev "grep"
+sudo kill -9 2644
+
+
+
+cockroach quit --insecure --host=cockroach1
+cockroach quit --insecure --host=cockroach2
+cockroach quit --insecure --host=cockroach3
+cockroach quit --insecure --host=cockroach4
+
+
+gcloud compute instances delete cockroach4
+gcloud compute instances delete cockroach3
+gcloud compute instances delete cockroach2
+gcloud compute instances delete cockroach1
+
+
+-- !!! https://github.com/YugaByte/yugabyte-db
+-- https://arenadata.tech/products/arenadata-db/
+
+добавить в презу
+-- https://www.cockroachlabs.com/get-started-cockroachdb/
+-- стартанет ли кокроач после рестарта ноды?
+-- как запустить кокроач после sudo kill 
