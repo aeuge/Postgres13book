@@ -1,5 +1,5 @@
 -- HA clusters
--- PostgresHA GKE - уменьшаем мощность машины и указываем только 1 зону 1 региона, иначе не влезем в бесплатную квоту
+-- PostgresHA GKE - уменьшаем мощность машины и указываем только 1 зону 1 региона для экономии
 
 gcloud beta container --project "celtic-house-266612" clusters create "postgresha" --zone "us-central1-c" --no-enable-basic-auth --cluster-version "1.19.9-gke.1900" --release-channel "None" --machine-type "e2-medium" --image-type "COS_CONTAINERD" --disk-type "pd-ssd" --disk-size "30" --metadata disable-legacy-endpoints=true --max-pods-per-node "110" --preemptible --num-nodes "3" --enable-stackdriver-kubernetes --enable-ip-alias --network "projects/celtic-house-266612/global/networks/default" --subnetwork "projects/celtic-house-266612/regions/us-central1/subnetworks/default" --no-enable-intra-node-visibility --default-max-pods-per-node "110" --no-enable-master-authorized-networks --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "us-central1-c"
 
@@ -60,7 +60,8 @@ helm upgrade pgsql-ha bitnami/postgresql-ha --set service.type=LoadBalancer --se
 export SERVICE_IP=$(kubectl get svc --namespace default pgsql-ha-postgresql-ha-pgpool --template "{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}")
 echo $SERVICE_IP
 PGPASSWORD=W8gBnN9UEb psql -h $SERVICE_IP -p 5432 -U postgres -d postgres
-
+-- 2 case
+PGPASSWORD=$POSTGRES_PASSWORD psql -h $SERVICE_IP -p 5432 -U postgres -d postgres
 
 gcloud container clusters delete postgresha --zone us-central1-c
 

@@ -10,4 +10,6 @@
 9. https://github.com/greenplum-db/gpdb
 10. https://www.cockroachlabs.com/docs/v21.1/install-cockroachdb-linux
 11. https://ru.wikipedia.org/wiki/SCP
-12. 
+12. https://www.cockroachlabs.com/docs/v21.1/secure-a-cluster.html
+13. https://github.com/cockroachdb/helm-charts/tree/master/cockroachdb#running-in-secure-mode
+14. 
