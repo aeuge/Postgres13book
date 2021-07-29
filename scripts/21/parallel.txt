@@ -124,7 +124,7 @@ kubectl run -it --rm cockroach-client --image=cockroachdb/cockroach --restart=Ne
 
 
 
-> show databases;
+> SHOW databases;
 > CREATE DATABASE bank;
 > USE bank;
 -- делаем автоматическую генерацию UUID
@@ -139,24 +139,16 @@ kubectl run -it --rm cockroach-client --image=cockroachdb/cockroach --restart=Ne
 
 kubectl port-forward cockroach-cockroachdb-0 8080
 http://localhost:8080
--- иногда 2 из 3 развертывается - посмотрим аллоцированные ресурсы в браузере GCP
+-- посмотрим аллоцированные ресурсы в браузере GCP
 kubectl top node
 
--- пороняем ноды
-kubectl get pods
-kubectl delete pod cockroach-cockroachdb-2
--- посмотрим в вебинтерфейсе что с нодой
-
+-- получим доступ из psql
 kubectl port-forward cockroach-cockroachdb-0 26257
 
-psql -h localhost -p 26257 -U root
-> show users;
-> show TABLEs;
-> show databases;
-> use bank;
+psql -h localhost -p 26257 -U root -d defaultdb
+\l
+> USE bank;
 > SELECT * FROM bank.accounts;
-> CREATE TABLE if not exists items (itemname varchar(128) primary key, price decimal(19,4), quantity int);
-> import INTO items (itemname, price, quantity) CSV DATA ('gs://pg202101/cockroachdb.csv') WITH DELIMITER = E'\t';
 
 > CREATE TABLE test (
     Region VARCHAR(50),
@@ -174,25 +166,336 @@ psql -h localhost -p 26257 -U root
     TotalCost decimal(12,2),
     TotalProfit decimal(12,2)
 );
-> import INTO test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) CSV DATA ('gs://pg202101/100SalesRecords.csv') WITH DELIMITER = ',', SKIP = '1';
-
 
 -- за сколько загрузится 1 000 000? 125Мб
-> import INTO test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) CSV DATA ('gs://pg202101/1000000SalesRecords.csv') WITH DELIMITER = ',', SKIP = '1';
+> import INTO test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) CSV DATA ('gs://postgres13/1000000SalesRecords.csv') WITH DELIMITER = ',', SKIP = '1';
 
+
+\timing
 > SELECT count(*) FROM test WHERE unitssold=124;
 > CREATE index test_idx on test(unitssold);
+> SELECT count(*) FROM test WHERE unitssold=124;
 
 -- BACKUP
--- чтобы бэкап сработал, нужно создавать ноды с режимом доступа к CloudIP
-BACKUP DATABASE bank TO 'gs://pg202101/database-bank-2017-03-27-weekly' AS OF SYSTEM TIME '-10s';
--- в файлы только enterprice
+-- чтобы бэкап сработал, нужно создавать ноды с режимом доступа к Cloud API
+BACKUP DATABASE bank TO 'gs://postgres/database-bank-2021-07-28-weekly' AS OF SYSTEM TIME '-10s';
+-- в файлы только enterprise
 BACKUP DATABASE bank TO 'file://111.txt' AS OF SYSTEM TIME '-10s';
 
 
-gcloud container clusters list
 gcloud container clusters delete cockroachdb --zone us-central1-c
+gcloud compute disks list
 
---посмотрим, что осталось от кластера
 
 
+-- CITUS in GCE
+-- Создал 3 VM - citus1, citus2, citus3
+-- ssd 100
+gcloud beta compute --project=celtic-house-266612 instances create citus1 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --no-restart-on-failure --maintenance-policy=TERMINATE --preemptible --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210130 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=citus1 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=none
+
+-- on new ubuntu-2010-groovy-v20210720
+gcloud beta compute --project=celtic-house-266612 instances create citus1 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --no-restart-on-failure --maintenance-policy=TERMINATE --preemptible --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210720 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=citus1 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=none
+gcloud beta compute --project=celtic-house-266612 instances create citus2 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --no-restart-on-failure --maintenance-policy=TERMINATE --preemptible --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210720 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=citus2 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=none
+gcloud beta compute --project=celtic-house-266612 instances create citus3 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --no-restart-on-failure --maintenance-policy=TERMINATE --preemptible --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2010-groovy-v20210720 --image-project=ubuntu-os-cloud --boot-disk-size=100GB --boot-disk-type=pd-ssd --boot-disk-device-name=citus3 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=none
+
+gcloud compute ssh citus1
+gcloud compute ssh citus2
+gcloud compute ssh citus3
+
+-- Ставим на них CITUS
+-- Кластер на 1 машине
+-- https://docs.citusdata.com/en/stable/installation/single_machine_debian.html#post-install
+
+-- на нескольких
+-- https://docs.citusdata.com/en/stable/installation/multi_machine_debian.html#steps-to-be-executed-on-all-nodes
+
+
+-- Steps to be executed on all nodes
+-- 1. Add repository
+-- sudo apt update && sudo apt upgrade -y
+-- Add Citus repository for package manager
+curl https://install.citusdata.com/community/deb.sh | sudo bash
+
+-- 2. Install PostgreSQL + Citus and initialize a database
+sudo apt-get -y install postgresql-13-citus-10.1
+
+-- error
+cd /etc/apt/sources.list.d
+sudo nano citusdata_community.list
+groovy --> focal
+sudo apt update
+sudo apt-get -y install postgresql-13-citus-10.1
+
+&& on 2 & 3 nodes
+curl https://install.citusdata.com/community/deb.sh | sudo bash && cd /etc/apt/sources.list.d && sudo nano citusdata_community.list
+groovy --> focal
+sudo apt update && sudo apt-get -y install postgresql-13-citus-10.1
+
+
+
+
+-- preload citus extension
+sudo pg_conftool 13 main set shared_preload_libraries citus
+
+-- This installs centralized configuration in /etc/postgresql/13/main, and creates a database in /var/lib/postgresql/13/main.
+-- 3. Configure connection and authentication
+sudo pg_conftool 13 main set listen_addresses '*'
+
+-- все вместе 1 командой
+sudo apt update && sudo apt upgrade -y && curl https://install.citusdata.com/community/deb.sh | sudo bash && sudo apt-get -y install postgresql-13-citus-9.5 && sudo pg_conftool 13 main set shared_preload_libraries citus && sudo pg_conftool 13 main set listen_addresses '*'
+
+sudo nano /etc/postgresql/13/main/pg_hba.conf
+host  all all 10.128.0.0/16            trust
+host    all             all             0.0.0.0/0            md5  -- только на контроллере
+
+sudo service postgresql restart
+# and make it start automatically when computer does
+sudo update-rc.d postgresql enable
+
+
+# add the citus extension - экстеншн ставится для конкретной БД !!
+sudo -i -u postgres psql -c "CREATE EXTENSION citus;"
+
+-- активируем ноды на коммутаторе
+sudo -i -u postgres psql -c "SELECT * FROM master_add_node('citus2', 5432);"
+sudo -i -u postgres psql -c "SELECT * FROM master_add_node('citus3', 5432);"
+-- проверим, что все подключилось 
+sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
+
+-- Здесь пытался добавить сам координатор как ноду - тоже работет. но не рекомендовано
+-- убрать ноду также просто
+-- SELECT master_remove_node('citus1', 5432);
+
+sudo -i -u postgres psql
+\l
+CREATE DATABASE bank;
+-- NOTICE:  Citus partially supports create DATABASE for distributed databases
+-- DETAIL:  Citus does not propagate create DATABASE command to workers
+-- HINT:  You can manually create a DATABASE and its extensions on workers. !!!
+
+\c bank
+CREATE TABLE t( i int);
+-- посмотрим на воркерах и что? почему?
+\dt
+
+CREATE EXTENSION citus;
+
+-- добавили uuid в 9.5
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      balance DECIMAL
+  );
+
+-- 2 вариант
+-- create EXTENSION IF NOT EXISTS "uuid-ossp";
+-- create TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v1(),
+      balance DECIMAL
+  );
+INSERT INTO accounts (balance)
+  VALUES
+      (1000.50), (20000), (380), (500), (55000);
+-- посмотрим что в других нодах? 
+
+SELECT * FROM master_get_active_worker_nodes();
+
+https://docs.citusdata.com/en/sTABLE/get_started/tutorial_multi_tenant.html#data-model-and-sample-data
+-- создадим таблички
+-- нарежем ключи
+-- партиционируем
+-- before distributing TABLEs, enable some extra features
+SET citus.replication_model = 'streaming';
+-- добавим екстеншн к нам в бд
+SELECT * FROM pg_extension;
+CREATE EXTENSION citus;
+-- добавим 2 узла
+SELECT * FROM master_add_node('citus2', 5432);
+SELECT * FROM master_add_node('citus3', 5432);
+-- SELECT master_remove_node('citus1', 5432);
+
+SELECT create_distributed_table('accounts', 'id');
+
+\dt+
+
+
+добавим 4 ноду 
+gcloud beta compute --project=celtic-house-266612 instances create citus4 --zone=us-central1-a --machine-type=e2-medium --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --service-account=933982307116-compute@developer.gserviceaccount.com --scopes=https://www.googleapis.com/auth/cloud-platform --image=ubuntu-2004-focal-v20210129 --image-project=ubuntu-os-cloud --boot-disk-size=20GB --boot-disk-type=pd-ssd --boot-disk-device-name=citus4 --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any
+gcloud compute ssh citus4
+sudo apt update && sudo apt upgrade -y && curl https://install.citusdata.com/community/deb.sh | sudo bash && sudo apt-get -y install postgresql-13-citus-9.5 && sudo pg_conftool 13 main set shared_preload_libraries citus && sudo pg_conftool 13 main set listen_addresses '*'
+
+sudo nano /etc/postgresql/13/main/pg_hba.conf
+-- 10.128.0.0/16            trust
+
+sudo service postgresql restart
+-- and make it start automatically when computer does
+sudo update-rc.d postgresql enable
+
+sudo -i -u postgres psql
+
+CREATE DATABASE bank;
+\c bank
+CREATE EXTENSION citus;
+SET citus.replication_model = 'streaming';
+
+-- на координаторе добавим 4 ноду
+SELECT * FROM master_add_node('citus4.europe-north1-b.c.celtic-house-266612.internal', 5432);
+
+-- перебалансируем по нодам
+SELECT rebalance_table_shards('accounts');
+-- ERROR:  rebalance_table_shards() is only supported on Citus Enterprise
+
+
+-- дропнем таблицу
+DROP TABLE accounts;
+-- размажем заново
+CREATE TABLE accounts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      balance DECIMAL
+  );
+SELECT CREATE_distributed_TABLE('accounts', 'id');
+
+INSERT INTO accounts (balance)
+  VALUES
+      (1000.50), (20000), (380), (500), (55000);
+
+-- посмотрим на координаторе
+SELECT * FROM pg_dist_shard;
+
+-- посмотрим на данные на нодах
+\dt+
+SELECT * FROM accounts;
+
+SELECT * FROM master_get_active_worker_nodes();
+
+ALTER TABLE accounts rename to accounts2;
+SELECT * FROM pg_dist_shard;
+
+
+> create TABLE test (
+    Region VARCHAR(50),
+    Country VARCHAR(50),
+    ItemType VARCHAR(50),
+    SalesChannel VARCHAR(20),
+    OrderPriority VARCHAR(10),
+    OrderDate VARCHAR(10),
+    OrderID int,
+    ShipDate VARCHAR(10),
+    UnitsSold int,
+    UnitPrice decimal(12,2),
+    UnitCost decimal(12,2),
+    TotalRevenue decimal(12,2),
+    TotalCost decimal(12,2),
+    TotalProfit decimal(12,2)
+);
+ALTER TABLE test ADD PRIMARY KEY (OrderID);
+SELECT CREATE_distributed_TABLE('test', 'OrderID');
+-- почему ошибка?
+
+
+
+SELECT * FROM test limit 1;
+SELECT CREATE_distributed_TABLE('test', 'orderid');
+
+-- не получается из бакета загрузить
+-- copy test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) FROM 'gs://pg21/100SalesRecords.csv' DELIMITER ',' CSV HEADER;
+sudo mkdir /home/1
+sudo chmod 777 /home/1
+scp /mnt/c/download/100SalesRecords.csv aeugene@34.69.216.129:/home/1/
+\timing
+> copy test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) FROM '/home/1/100SalesRecords.csv' DELIMITER ',' CSV HEADER;
+scp /mnt/c/download/1000000SalesRecords.csv aeugene@34.69.216.129:/home/1/
+> copy test (Region,Country,ItemType,SalesChannel,OrderPriority,OrderDate,OrderID,ShipDate,UnitsSold,UnitPrice,UnitCost,TotalRevenue,TotalCost,TotalProfit) FROM '/home/1/1000000SalesRecords.csv' DELIMITER ',' CSV HEADER;
+
+DROP TABLE test;
+CREATE TABLE test (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    Region VARCHAR(50),
+    Country VARCHAR(50),
+    ItemType VARCHAR(50),
+    SalesChannel VARCHAR(20),
+    OrderPriority VARCHAR(10),
+    OrderDate VARCHAR(10),
+    OrderID int,
+    ShipDate VARCHAR(10),
+    UnitsSold int,
+    UnitPrice decimal(12,2),
+    UnitCost decimal(12,2),
+    TotalRevenue decimal(12,2),
+    TotalCost decimal(12,2),
+    TotalProfit decimal(12,2)
+);
+SELECT CREATE_distributed_TABLE('test', 'id');
+
+-- включить репликацию для надежности
+show citus.shard_replication_factor;
+
+
+
+-- проверим подключение
+ALTER USER postgres PASSWORD '123otus$';
+psql -h 34.69.216.129 -U postgres -W
+
+-- посмотрим bigquery
+SELECT count(*) FROM `bigquery-public-data.chicago_taxi_trips.taxi_trips`;
+
+-- https://pgtune.leopard.in.ua/#/
+gcloud config list
+bq show bigquery-public-data:chicago_taxi_trips.taxi_trips
+bq extract bigquery-public-data:chicago_taxi_trips.taxi_trips gs://pg2021/chicago/taxi.csv.*
+cd /home/1
+gsutil cp gs://pg2021/chicago/taxi.csv.* .
+
+-- вариант смонтировать бакет в локальную директорию
+https://github.com/GoogleCloudPlatform/gcsfuse
+-- монтируем в каталог под юзером postgres
+gcsfuse pg2021 .
+
+sudo -i -u postgres psql
+\c bank
+CREATE TABLE taxi_trips(unique_key text
+,taxi_id text
+,trip_start_timestamp timestamp
+,trip_end_timestamp timestamp
+,trip_seconds bigint
+,trip_miles float
+,pickup_census_tract bigint
+,dropoff_census_tract bigint
+,pickup_community_area bigint
+,dropoff_community_area bigint
+,fare float
+,tips float
+,tolls float
+,extras float
+,trip_total float
+,payment_type text
+,company text
+,pickup_latitude float
+,pickup_longitude float
+,pickup_location text
+,dropoff_latitude float
+,dropoff_longitude float
+,dropoff_location text);
+
+sudo su postgres
+-- export PGPASSWORD='123otus$';
+for f in *.csv*; do psql -d bank -c "\\COPY taxi_trips FROM PROGRAM 'cat $f' CSV HEADER"; done
+
+\timing
+SELECT payment_type, round(sum(tips)/sum(tips+fare)*100) tips_persent, count(*)
+FROM taxi_trips
+group by payment_type
+
+order by 3 desc;
+
+SELECT CREATE_distributed_TABLE('taxi_trips', 'unique_key');
+SELECT * FROM pg_dist_shard;
+
+sudo apt install iftop
+sudo iftop
+sudo apt install htop
+sudo htop
+atop -- подкрасит проблемы через некоторе время
+
+gcloud compute instances delete citus3
+gcloud compute instances delete citus2
+gcloud compute instances delete citus1

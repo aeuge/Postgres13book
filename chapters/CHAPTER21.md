@@ -12,4 +12,7 @@
 11. https://ru.wikipedia.org/wiki/SCP
 12. https://www.cockroachlabs.com/docs/v21.1/secure-a-cluster.html
 13. https://github.com/cockroachdb/helm-charts/tree/master/cockroachdb#running-in-secure-mode
-14. 
+14. https://docs.citusdata.com/en/stable/get_started/concepts.html
+15. https://docs.citusdata.com/en/stable/installation/single_node_debian.html#post-install
+16. https://docs.citusdata.com/en/stable/installation/multi_node_debian.html#steps-to-be-executed-on-all-nodes
+17. 
