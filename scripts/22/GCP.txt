@@ -1,4 +1,8 @@
-./cloud_sql_proxy -instances=celtic-house-266612:us-central1:cloudsql1=tcp:5432
+--9tvGLCXfuZBQbDf
+psql -h 104.154.255.84 -U postgres
+\l
+
+./cloud_sql_proxy -instances=celtic-house-266612:us-central1:cloudsql=tcp:5432
 psql -h localhost -U postgres
 
 SELECT * FROM bigquery-public-data.chicago_taxi_trips.taxi_trips limit 1000000;

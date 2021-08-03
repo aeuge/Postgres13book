@@ -19,4 +19,4 @@
 18. https://docs.citusdata.com/en/stable/admin_guide/cluster_management.html#worker-security
 19. https://docs.citusdata.com/en/stable/get_started/tutorial_multi_tenant.html#data-model-and-sample-data
 20. https://github.com/GoogleCloudPlatform/gcsfuse
-
+21. https://github.com/GoogleCloudPlatform/gcsfuse/blob/master/docs/installing.md
