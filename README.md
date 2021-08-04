@@ -24,7 +24,7 @@
 20. [Кластеры высокой доступности для PostgreSQL](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER20.md)    
 21. [Кластеры для горизонтального масштабирования PostgreSQL](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER21.md)
 22. [PostgreSQL и Google Cloud Platform](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER22.md)    
-23. PostgreSQL и AWS    
+23. [PostgreSQL и AWS](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER23.md)    
 24. PostgreSQL и Azure    
 25. PostgreSQL и Яндекс Облако
 

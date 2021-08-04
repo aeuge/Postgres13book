@@ -2,44 +2,11 @@
 psql -h 104.154.255.84 -U postgres
 \l
 
+wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy
+chmod +x cloud_sql_proxy
 ./cloud_sql_proxy -instances=celtic-house-266612:us-central1:cloudsql=tcp:5432
+
 psql -h localhost -U postgres
 
-SELECT * FROM bigquery-public-data.chicago_taxi_trips.taxi_trips limit 1000000;
-
-bq extract bigquery-public-data:chicago_taxi_trips.taxi_trips gs://pg2021/chicago/taxi.csv.*
-
-заимпортить TIMESTAMP просто так не выйдет %( поэтому STRING
-
-CREATE TABLE taxi_trips(unique_key STRING(50)
-,taxi_id STRING(200)
-,trip_start_timestamp STRING(50)
-,trip_end_timestamp STRING(50)
-,trip_seconds INT64
-,trip_miles FLOAT64
-,pickup_census_tract INT64
-,dropoff_census_tract INT64
-,pickup_community_area INT64
-,dropoff_community_area INT64
-,fare FLOAT64
-,tips FLOAT64
-,tolls FLOAT64
-,extras FLOAT64
-,trip_total FLOAT64
-,payment_type STRING(100)
-,company STRING(100)
-,pickup_latitude FLOAT64
-,pickup_longitude FLOAT64
-,pickup_location STRING(255)
-,dropoff_latitude FLOAT64
-,dropoff_longitude FLOAT64
-,dropoff_location STRING(255));
-
-
--- мигрируем через dataflow
-gs://pg2021/manifest2.yaml
-gs://pg2021/temp
-
--- !!! файл манифеста в UTF8
-
+-- connect to 2 instances
 /cloud_sql_proxy -instances=myProject:us-central1:myInstance=tcp:5432,myProject:us-central1:myInstance2=tcp:1234
