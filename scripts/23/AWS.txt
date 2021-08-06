@@ -9,8 +9,12 @@ sudo -u postgres psql
 \password
 -- test123
 exit
+-- listener = '*'
 sudo nano /etc/postgresql/13/main/postgresql.conf
+
+-- host    all             all             0.0.0.0/0            md5
 sudo nano /etc/postgresql/13/main/pg_hba.conf
+
 sudo pg_ctlcluster 13 main restart
 
 psql -h 18.219.24.181 -U postgres
