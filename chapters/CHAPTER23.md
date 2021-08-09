@@ -11,4 +11,5 @@
 10. https://aws.amazon.com/ru/s3/
 11. https://aws.amazon.com/ru/dynamodb/
 12. https://aws.amazon.com/ru/redshift/
-13. https://aws.amazon.com/ru/big-data/datalakes-and-analytics/what-is-a-data-lake/
+13. https://aws.amazon.com/cli/
+14. https://aws.amazon.com/ru/big-data/datalakes-and-analytics/what-is-a-data-lake/
