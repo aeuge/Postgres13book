@@ -17,15 +17,16 @@
 16. https://ftp.postgresql.org/pub/source/v12.1/postgresql-12.1.tar.gz
 17. https://cloud.google.com/
 18. https://en.wikipedia.org/wiki/Ping
-19. https://cloud.google.com/sdk/gcloud
-20. https://en.wikipedia.org/wiki/IP_address
-21. https://en.wikipedia.org/wiki/SSH_(Secure_Shell)
-22. https://github.com/aeuge/Postgres13book/blob/main/01/docker-compose.yml
-23. https://en.wikipedia.org/wiki/Firewall_(computing)
-24. https://en.wikipedia.org/wiki/Subnetwork
-25. https://en.wikipedia.org/wiki/Front_end_and_back_end
-26. https://en.wikipedia.org/wiki/Representational_state_transfer
-27. https://en.wikipedia.org/wiki/Port_(computer_networking)
+19. https://en.wikipedia.org/wiki/Solid-state_drive
+20. https://cloud.google.com/sdk/gcloud
+21. https://en.wikipedia.org/wiki/IP_address
+22. https://en.wikipedia.org/wiki/SSH_(Secure_Shell)
+23. https://github.com/aeuge/Postgres13book/blob/main/01/docker-compose.yml
+24. https://en.wikipedia.org/wiki/Firewall_(computing)
+25. https://en.wikipedia.org/wiki/Subnetwork
+26. https://en.wikipedia.org/wiki/Front_end_and_back_end
+27. https://en.wikipedia.org/wiki/Representational_state_transfer
+28. https://en.wikipedia.org/wiki/Port_(computer_networking)
 
 
 
