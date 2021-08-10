@@ -18,3 +18,26 @@ psql -h 84.201.139.215 -U postgres
 
 
 -- Yandex Managed Service for PostgreSQL
+-- test1234
+mkdir -p ~/.postgresql && \
+wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" -O ~/.postgresql/root.crt && \
+chmod 0600 ~/.postgresql/root.crt
+
+
+psql "host=rc1a-gg2psk4u3vf6t2wm.mdb.yandexcloud.net,rc1b-uo2dph2fo20jkugj.mdb.yandexcloud.net,rc1c-4gs18rfd7vhq6lrk.mdb.yandexcloud.net \
+      port=6432 \
+      sslmode=verify-full \
+      dbname=db1 \
+      user=user1 \
+      target_session_attrs=read-write"
+
+
+pg_dump "host=rc1a-gg2psk4u3vf6t2wm.mdb.yandexcloud.net,rc1b-uo2dph2fo20jkugj.mdb.yandexcloud.net,rc1c-4gs18rfd7vhq6lrk.mdb.yandexcloud.net \
+      port=6432 \
+      sslmode=verify-full \
+      dbname=db1 \
+      user=user1 \
+      target_session_attrs=read-write"
+
+
+       
