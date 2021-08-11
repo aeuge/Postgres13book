@@ -1,5 +1,8 @@
+-- physycal level
 gcloud compute ssh postgres13
 pg_lsclusters
+
+-- add another cluster
 sudo pg_createcluster 13 main2
 sudo nano /etc/postgresql/13/main/postgresql.conf
 sudo su postgres

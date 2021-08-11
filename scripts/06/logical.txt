@@ -1,6 +1,3 @@
-
-
-
 -- database
 -- system catalog
 SELECT oid, datname, datistemplate, datallowconn FROM pg_database;

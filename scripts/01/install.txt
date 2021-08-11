@@ -17,6 +17,8 @@ sudo docker run --name pg-server -e POSTGRES_PASSWORD=postgres -d -p 5432:5432 -
 docker-compose up -d
 docker-compose down
 
+psql -h localhost -U postgres -W
+
 -- generate ssh keys
 mkdir $HOME\.ssh
 chmod 700 $HOME\.ssh
@@ -24,3 +26,6 @@ ssh-keygen имя
 ssh-add имя
 cat имя.pub 
 ssh имя@ip созданной ВМ
+
+-- connect to cloud sql
+psql -h 35.232.186.114 -U postgres -W
