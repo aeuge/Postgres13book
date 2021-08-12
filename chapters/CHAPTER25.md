@@ -8,5 +8,4 @@
 7. https://cloud.yandex.ru/docs/cli
 
 bonus
-https://comparecloud.in/
 https://cloudpingtest.com/
