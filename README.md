@@ -1,6 +1,6 @@
-# Author https://aristov.tech
 # PostgreSQL 13. Тюнинг && Kubernetes && Облака
-# Оглавление / CHAPTER
+# Author https://aristov.tech
+# Оглавление
 1. [Установка PostgreSQL 13](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER01.md)
 2. [Физический уровень](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER02.md)
 3. [Работа с консольной утилитой psql](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER03.md)
