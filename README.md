@@ -1,4 +1,4 @@
-# PostgreSQL 13. Тюнинг && Kubernetes && Облака
+# PostgreSQL 13. Тюнинг, Kubernetes, облака.
 # Author https://aristov.tech
 # Оглавление
 1. [Установка PostgreSQL 13](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER01.md)
