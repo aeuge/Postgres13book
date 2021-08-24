@@ -63,3 +63,19 @@ psql
 -- size of tablespace
 # SELECT pg_size_pretty(pg_tablespace_size('ts'));
 
+
+-- open access
+-- uncomment listen_addresses = '*'
+sudo nano /etc/postgresql/13/main/postgresql.conf
+
+-- host    all             all             0.0.0.0/0               md5
+sudo nano /etc/postgresql/13/main/pg_hba.conf:
+
+-- change password
+ALTER USER postgres PASSWORD 'Postgres123#';
+
+-- restart server
+sudo pg_ctlcluster 13 main restart
+
+-- try access
+psql -h 34.66.131.159 -U postgres -W

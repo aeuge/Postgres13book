@@ -11,7 +11,7 @@
 8. [Журналы](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER08.md)
 9. [Блокировки](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER09.md)
 10. [Настройка PostgreSQL](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER10.md)
-11. [Работа с большим объемом реальных данных](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER11.md)
+11. [Работа с большим объёмом реальных данных](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER11.md)
 12. [Виды индексов. Работа с индексами и оптимизация запросов](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER12.md)
 13. [Различные виды join'ов. Применение и оптимизация](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER13.md)
 14. [Сбор и использование статистики](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER14.md)
