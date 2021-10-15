@@ -20,8 +20,15 @@ order by 3 desc;
 https://github.com/GoogleCloudPlatform/gcsfuse
 -- installing
 https://github.com/GoogleCloudPlatform/gcsfuse/blob/master/docs/installing.md
+export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s`
+echo "deb http://packages.cloud.google.com/apt $GCSFUSE_REPO main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+
+sudo apt-get update
+sudo apt-get install gcsfuse
+
 -- монтируем в каталог под юзером postgres
-sudo -u postgres
+sudo su postgres
 cd $HOME
 mkdir taxi
 gcsfuse pg13 taxi
@@ -55,7 +62,7 @@ CREATE TABLE taxi_trips(unique_key text
 ,dropoff_longitude float
 ,dropoff_location text);
 
-cd /home/aeugene/taxi
+cd /var/lib/postgresql/taxi
 for f in *.csv*; do psql -d taxi -c "\\COPY taxi_trips FROM PROGRAM 'cat $f' CSV HEADER"; done
 
 \timing
