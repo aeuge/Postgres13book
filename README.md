@@ -1,7 +1,7 @@
 # Проект в этой версии закрыт
-# Ссылка на второе издание, в котором уменьшено количество теоретических материалов, добавлено немного практики и ссылок на дополнительное изучение
-# https://github.com/aeuge/Postgres13book_v2
-# PostgreSQL 13. Тюнинг, Kubernetes, облака.
+# Ссылка на новую книгу по 14 версии Постгреса
+# https://github.com/aeuge/Postgres14book
+# PostgreSQL 14. Оптимизация, Kubernetes, кластера, облака.
 # Author https://aristov.tech
 # Оглавление
 1. [Установка PostgreSQL 13](https://github.com/aeuge/Postgres13book/blob/main/chapters/CHAPTER01.md)
